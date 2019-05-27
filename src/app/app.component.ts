@@ -1,4 +1,5 @@
 import { Component } from '@angular/core';
+import { AudioService } from './shared/audio.service';
 
 @Component({
   selector: 'app-root',
@@ -7,4 +8,10 @@ import { Component } from '@angular/core';
 })
 export class AppComponent {
   title = 'advancedaudioplayer';
+
+  constructor(private audio: AudioService) { }
+
+  playLocal() {
+    this.audio.playSound('../assets/kannadaaudio.mp3');
+  }
 }
