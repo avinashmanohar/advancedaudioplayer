@@ -12,6 +12,6 @@ export class AppComponent {
   constructor(private audio: AudioService) { }
 
   playLocal() {
-    this.audio.playSound('../assets/kannadaaudio.mp3');
+    this.audio.playSound('../audio/audio.mp3');
   }
 }
