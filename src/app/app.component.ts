@@ -10,6 +10,7 @@ import { Subject } from 'rxjs';
 export class AppComponent implements OnInit {
   title = 'advancedaudioplayer';
   audioworkletRunning: Subject<boolean>;
+  url: string;
 
   constructor(private audio: AudioService) { }
 
@@ -18,6 +19,7 @@ export class AppComponent implements OnInit {
   }
 
   playLocal() {
-    this.audio.playSound('../assets/audio/audio.mp3');
+    // this.audio.playSound('../assets/audio/audio.mp3');
+    this.audio.playSound(this.url);
   }
 }

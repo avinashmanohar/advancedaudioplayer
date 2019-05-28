@@ -1,0 +1,16 @@
+{
+  "hosting": {
+    "public": "dist/advancedaudioplayer",
+    "ignore": [
+      "firebase.json",
+      "**/.*",
+      "**/node_modules/**"
+    ],
+    "rewrites": [
+      {
+        "source": "**",
+        "destination": "/index.html"
+      }
+    ]
+  }
+}
