@@ -1,4 +1,6 @@
 import { Injectable } from '@angular/core';
+import { Subject } from 'rxjs';
+
 
 @Injectable({
   providedIn: 'root'
@@ -7,8 +9,10 @@ export class AudioService {
   public context: AudioContext;
 
   private source: AudioBufferSourceNode;
-  private processor: ScriptProcessorNode;
+  private processor: ScriptProcessorNode | AudioWorkletNode;
   private mix: GainNode;
+
+  // public audioworkletRunning: Subject<boolean>;
 
   constructor() {
     try {
@@ -66,14 +70,12 @@ export class AudioService {
     }
   }
 
-  createAudio() {
+  async createAudio() {
     // create the gain node
     this.mix = this.context.createGain();
     this.mix.gain.value = 1; // set to max vol;
 
-    // Create a ScriptProcessorNode with a bufferSize of 0 (Dynamic - system will auto fix buffer) and a single input and output channel
-    // create the processor
-    this.processor = this.context.createScriptProcessor(0 /*bufferSize*/, 2 /*num inputs*/, 6 /*num outputs*/);
+
 
     // Required stuff start
     const splitter = this.context.createChannelSplitter(6);
@@ -98,11 +100,30 @@ export class AudioService {
     // Required stuff start ends
 
     // start connecting
-    this.source.connect(this.processor);
-    this.processor.onaudioprocess = this.matrixProcessing;
-
+    if (this.context.audioWorklet && typeof this.context.audioWorklet.addModule === 'function') {
+      console.log('Audioworklet support detected, don\'t use the old scriptprocessor...');
+      // this.audioworkletRunning.next(true);
+      await this.context.audioWorklet.addModule('../assets/bypass-processor.js').then(() => {
+        this.processor = new AudioWorkletNode(this.context, 'bypass-processor', {
+          // you have to specify the channel count for each input, so by default only 1 is needed
+          outputChannelCount: [6]
+        });
+        // console.log(this.processor);
+        this.source.connect(this.processor);
+      });
+    } else {
+      console.log('Audioworklet not support detected, using old scriptprocessor...');
+      // this.audioworkletRunning.next(false);
+      // Create a ScriptProcessorNode with a bufferSize of 0 (Dynamic - system will auto fix buffer) and a single input and output channel
+      // create the processor
+      this.processor = this.context.createScriptProcessor(0 /*bufferSize*/, 2 /*num inputs*/, 6 /*num outputs*/);
+      this.source.connect(this.processor);
+      this.processor.onaudioprocess = this.matrixProcessing;
+      // Because onaudioprocess is depricating, Audioworklet is implemented, this will fallback if above is failed.
+    }
     this.processor.connect(this.mix);
 
+    console.log(this.mix);
     // Assign nodes of every channel saperately
     this.mix.connect(splitter);
     splitter.connect(gainL, 0); // Assign left to gainL
@@ -125,7 +146,7 @@ export class AudioService {
     gainSR.connect(delaySR);
 
     // Set some delay to surround channels
-    const delay = 30 / 1000;
+    const delay = 50 / 1000;
     delaySL.delayTime.value = delay;
     delaySR.delayTime.value = delay;
 
@@ -156,9 +177,9 @@ export class AudioService {
     filterHighPassSR.frequency.value = HighPassFreq;
     // Filters ends
 
-    filterHighPassL.connect(merger, 0, 0); // Left 
+    filterHighPassL.connect(merger, 0, 0); // Left
     filterHighPassR.connect(merger, 0, 1); // Right
-    filterHighPassSL.connect(merger, 0, 2); // Center
+    filterHighPassC.connect(merger, 0, 2); // Center
     filterLowPassSW.connect(merger, 0, 3); // Sub Woofer
     filterHighPassSL.connect(merger, 0, 4); // Surround Left
     filterHighPassSR.connect(merger, 0, 5); // Surround Right
