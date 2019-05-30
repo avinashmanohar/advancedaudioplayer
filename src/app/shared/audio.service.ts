@@ -293,7 +293,7 @@ export class AudioService {
     this.delayC.delayTime.value = this.centerDelay;
     this.delaySW.delayTime.value = this.subWooferDelay;
     this.delayL.delayTime.value = this.frontDelay;
-    this.delayR.delayTime.value = 0;//testing
+    this.delayR.delayTime.value = 0; // testing
     this.delaySL.delayTime.value = this.surroundDelay;
     this.delaySR.delayTime.value = this.surroundDelay;
   }

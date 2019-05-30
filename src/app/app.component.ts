@@ -21,8 +21,8 @@ export class AppComponent implements OnInit {
 
   sliderMouseDown = false;
 
-  // url = 'https://raw.githubusercontent.com/mdn/webaudio-examples/master/multi-track/drums.mp3';
-  url = '../assets/audio/audio7.mp3';
+  url = 'https://raw.githubusercontent.com/mdn/webaudio-examples/master/multi-track/drums.mp3';
+  // url = '../assets/audio/audio7.mp3';
   seekSubscription: Subscription;
 
   // Delay variables
