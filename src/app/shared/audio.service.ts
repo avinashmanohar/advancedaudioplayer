@@ -1,51 +1,87 @@
 import { Injectable } from '@angular/core';
 import { Subject } from 'rxjs';
+import { HttpClient } from '@angular/common/http';
+import { HelperService } from './helper.service';
 
 
 @Injectable({
   providedIn: 'root'
 })
 export class AudioService {
+
+  constructor(private http: HttpClient, private helper: HelperService) {
+    this.audioworkletRunning = new Subject<boolean>();
+    this.songDuration = new Subject<number>();
+  }
   public context: AudioContext;
 
   private source: AudioBufferSourceNode;
   private processor: ScriptProcessorNode | AudioWorkletNode;
-  private mix: GainNode;
+  private allGain: GainNode;
 
-  // public audioworkletRunning: Subject<boolean>;
+  private delayL: DelayNode;
+  private delayR: DelayNode;
+  private delayC: DelayNode;
+  private delaySW: DelayNode;
+  private delaySR: DelayNode;
+  private delaySL: DelayNode;
 
-  constructor() {
+  private filterHighPassL: BiquadFilterNode;
+  private filterHighPassR: BiquadFilterNode;
+  private filterHighPassC: BiquadFilterNode;
+  private filterHighPassSL: BiquadFilterNode;
+  private filterHighPassSR: BiquadFilterNode;
+  private filterLowPassSW: BiquadFilterNode;
 
+  public audioworkletRunning: Subject<boolean>;
+  public songDuration: Subject<number>;
+
+  public useWorklet = true;
+
+  // Delay variables
+  public frontDelay = 10 / 1000;
+  public surroundDelay = 50 / 1000;
+  public subWooferDelay = 0 / 1000;
+  public centerDelay = 0 / 1000;
+
+  // Filger variables
+  public highPassFreq = 300;
+  public lowPassFreq = 60;
+
+  playSound(url: string, position: number) {
+    // const request = new XMLHttpRequest();
+    // request.open('GET', url, true);
+    // request.responseType = 'arraybuffer';
+
+    // // Our asynchronous callback
+    // request.onload = () => {
+    //   const data = request.response;
+    //   this.processAudio(data);
+    //   // showData(data);
+    // };
+
+    // request.send();
+
+    this.http.get(url, {
+      responseType: 'arraybuffer'
+    }).subscribe(data => this.processAudio(data, position));
   }
 
-  playSound(url: string) {
-    const request = new XMLHttpRequest();
-    request.open('GET', url, true);
-    request.responseType = 'arraybuffer';
-
-    // Our asynchronous callback
-    request.onload = () => {
-      const data = request.response;
-      this.processAudio(data);
-      // showData(data);
-    };
-
-    request.send();
-  }
-
-  processAudio(data: any) {
+  processAudio(data: any, position: number) {
     if (this.source) {
       this.source.stop(0);
     }
 
     try {
-      this.context = new AudioContext();
+      this.context = new AudioContext({ latencyHint: 'playback' });
     } catch (e) {
       console.log('No audio');
     }
 
-    console.log(this.context.destination.maxChannelCount);
-    console.log(this.context.currentTime);
+    // console.log(this.context.baseLatency); // 0.01
+
+    // console.log(this.context.destination.maxChannelCount);
+    // console.log(this.context.currentTime);
     if (this.context.destination.maxChannelCount >= 6) {
       this.context.destination.channelCount = 6;
     } else {
@@ -60,7 +96,7 @@ export class AudioService {
     if (this.context.decodeAudioData) {
       this.context.decodeAudioData(data, (buffer) => {
         this.source.buffer = buffer;
-        this.createAudio();
+        this.createAudio(position);
       }, e => {
         console.error(e);
       });
@@ -69,14 +105,21 @@ export class AudioService {
         this.context.destination.channelCount,
         this.context.sampleRate * 3,
         this.context.sampleRate); // Create an empty three-second *stereo (5.1) buffer at the sample rate of the AudioContext
-      this.createAudio();
+      this.createAudio(position);
     }
   }
 
-  async createAudio() {
+  async createAudio(position: number) {
     // create the gain node
-    this.mix = this.context.createGain();
-    this.mix.gain.value = 1; // set to max vol;
+
+    // Visual controls
+    this.songDuration.next(this.source.buffer.duration);
+    // console.log(this.helper.convertPlaybackTime(this.source.buffer.duration));
+    // console.log(this.context.currentTime);
+    // Visual controls ends
+
+    this.allGain = this.context.createGain();
+    this.allGain.gain.value = 1; // set to max vol;
 
 
 
@@ -90,37 +133,44 @@ export class AudioService {
     const gainSL = this.context.createGain();
     const gainSR = this.context.createGain();
 
-    const delayL = this.context.createDelay();
-    const delayR = this.context.createDelay();
-    const delayC = this.context.createDelay();
-    const delaySW = this.context.createDelay();
-    const delaySL = this.context.createDelay();
-    const delaySR = this.context.createDelay();
+    this.delayL = this.context.createDelay();
+    this.delayR = this.context.createDelay();
+    this.delayC = this.context.createDelay();
+    this.delaySW = this.context.createDelay();
+    this.delaySL = this.context.createDelay();
+    this.delaySR = this.context.createDelay();
 
-    const filterHighPassL = this.context.createBiquadFilter();
-    const filterHighPassR = this.context.createBiquadFilter();
-    const filterHighPassC = this.context.createBiquadFilter();
-    const filterHighPassSL = this.context.createBiquadFilter();
-    const filterHighPassSR = this.context.createBiquadFilter();
+    this.filterHighPassL = this.context.createBiquadFilter();
+    this.filterHighPassR = this.context.createBiquadFilter();
+    this.filterHighPassC = this.context.createBiquadFilter();
+    this.filterHighPassSL = this.context.createBiquadFilter();
+    this.filterHighPassSR = this.context.createBiquadFilter();
 
-    const filterLowPassSW = this.context.createBiquadFilter();
+    this.filterLowPassSW = this.context.createBiquadFilter();
     // Required stuff start ends
 
     // start connecting
-    if (this.context.audioWorklet && typeof this.context.audioWorklet.addModule === 'function') {
+    if (this.context.audioWorklet && typeof this.context.audioWorklet.addModule === 'function' && this.useWorklet) {
       console.log('Audioworklet support detected, don\'t use the old scriptprocessor...');
-      // this.audioworkletRunning.next(true);
+      this.audioworkletRunning.next(true);
+      /* // Old way
       await this.context.audioWorklet.addModule('../assets/bypass-processor.js').then(() => {
         this.processor = new AudioWorkletNode(this.context, 'bypass-processor', {
           // you have to specify the channel count for each input, so by default only 1 is needed
           outputChannelCount: [6]
         });
-        // console.log(this.processor);
         this.source.connect(this.processor);
       });
+      */
+      await this.context.audioWorklet.addModule('../assets/bypass-processor.js'); // This is possible because we are using await.
+      this.processor = new AudioWorkletNode(this.context, 'bypass-processor', {
+        // you have to specify the channel count for each input, so by default only 1 is needed
+        outputChannelCount: [6]
+      });
+      this.source.connect(this.processor);
     } else {
       console.log('Audioworklet not support detected, using old scriptprocessor...');
-      // this.audioworkletRunning.next(false);
+      this.audioworkletRunning.next(false);
       // Create a ScriptProcessorNode with a bufferSize of 0 (Dynamic - system will auto fix buffer) and a single input and output channel
       // create the processor
       this.processor = this.context.createScriptProcessor(0 /*bufferSize*/, 2 /*num inputs*/, 6 /*num outputs*/);
@@ -128,11 +178,11 @@ export class AudioService {
       this.processor.onaudioprocess = this.matrixProcessing;
       // Because onaudioprocess is depricating, Audioworklet is implemented, this will fallback if above is failed.
     }
-    this.processor.connect(this.mix);
+    this.processor.connect(this.allGain);
 
     // console.log(this.mix);
     // Assign nodes of every channel saperately
-    this.mix.connect(splitter);
+    this.allGain.connect(splitter);
     splitter.connect(gainL, 0); // Assign left to gainL
     splitter.connect(gainR, 1); // Assign right to gainR
     splitter.connect(gainC, 2); // Assign Center to gainC
@@ -149,68 +199,40 @@ export class AudioService {
     gainSR.gain.value = 1;
 
     // Connect delay to channels
-    gainL.connect(delayL);
-    gainR.connect(delayR);
-    gainC.connect(delayC);
-    gainSW.connect(delaySW);
-    gainSL.connect(delaySL);
-    gainSR.connect(delaySR);
+    gainL.connect(this.delayL);
+    gainR.connect(this.delayR);
+    gainC.connect(this.delayC);
+    gainSW.connect(this.delaySW);
+    gainSL.connect(this.delaySL);
+    gainSR.connect(this.delaySR);
 
     // Set some delay to surround channels
-    const centerDelay = 0 / 1000;
-    delayC.delayTime.value = centerDelay;
-
-    const subWooferDelay = 0 / 1000;
-    delaySW.delayTime.value = subWooferDelay;
-
-    const frontDelay = 10 / 1000;
-    delayL.delayTime.value = frontDelay;
-    delayR.delayTime.value = frontDelay;
-
-    const surroundDelay = 50 / 1000;
-    delaySL.delayTime.value = surroundDelay;
-    delaySR.delayTime.value = surroundDelay;
+    this.updateDelay();
 
 
-    delaySW.connect(filterLowPassSW);
+    this.delaySW.connect(this.filterLowPassSW);
 
-    delayL.connect(filterHighPassL);
-    delayR.connect(filterHighPassR);
-    delayC.connect(filterHighPassC);
-    delaySL.connect(filterHighPassSL);
-    delaySR.connect(filterHighPassSR);
+    this.delayL.connect(this.filterHighPassL);
+    this.delayR.connect(this.filterHighPassR);
+    this.delayC.connect(this.filterHighPassC);
+    this.delaySL.connect(this.filterHighPassSL);
+    this.delaySR.connect(this.filterHighPassSR);
 
     // Filters
-    const lowPassFreq = 60; // Hz
-    const HighPassFreq = 300; // Hz
-    filterLowPassSW.type = 'lowpass'; // For subwoofer
-    filterLowPassSW.frequency.value = lowPassFreq;
-
-    filterHighPassL.type = 'highpass';
-    filterHighPassL.frequency.value = HighPassFreq;
-    filterHighPassR.type = 'highpass';
-    filterHighPassR.frequency.value = HighPassFreq;
-    filterHighPassC.type = 'highpass';
-    filterHighPassC.frequency.value = HighPassFreq;
-    filterHighPassSL.type = 'highpass';
-    filterHighPassSL.frequency.value = HighPassFreq;
-    filterHighPassSR.type = 'highpass';
-    filterHighPassSR.frequency.value = HighPassFreq;
+    this.updateFilter();
     // Filters ends
 
-    filterHighPassL.connect(merger, 0, 0); // Left
-    filterHighPassR.connect(merger, 0, 1); // Right
-    filterHighPassC.connect(merger, 0, 2); // Center
-    filterLowPassSW.connect(merger, 0, 3); // Sub Woofer
-    filterHighPassSL.connect(merger, 0, 4); // Surround Left
-    filterHighPassSR.connect(merger, 0, 5); // Surround Right
-
+    this.filterHighPassL.connect(merger, 0, 0); // Left
+    this.filterHighPassR.connect(merger, 0, 1); // Right
+    this.filterHighPassC.connect(merger, 0, 2); // Center
+    this.filterLowPassSW.connect(merger, 0, 3); // Sub Woofer
+    this.filterHighPassSL.connect(merger, 0, 4); // Surround Left
+    this.filterHighPassSR.connect(merger, 0, 5); // Surround Right
 
     merger.connect(this.context.destination);
 
-
     // playback the sound
-    this.source.start(0);
+    this.source.start(0, this.source.buffer.duration * position + this.context.currentTime);
   }
 
 
@@ -255,11 +277,42 @@ export class AudioService {
 
 
   disconnect() {
-    this.source.stop(0);
-    this.source.disconnect(0);
-    this.processor.disconnect(0);
-    this.mix.disconnect(0);
+    if (this.source) {
+      this.source.disconnect(0);
+      this.source.stop(0);
+      this.source.disconnect(0);
+      this.processor.disconnect(0);
+      this.allGain.disconnect(0);
+    }
 
     console.log('Disconnected!');
   }
+
+  updateDelay() {
+    // Set some delay to surround channels
+    this.delayC.delayTime.value = this.centerDelay;
+    this.delaySW.delayTime.value = this.subWooferDelay;
+    this.delayL.delayTime.value = this.frontDelay;
+    this.delayR.delayTime.value = 0;//testing
+    this.delaySL.delayTime.value = this.surroundDelay;
+    this.delaySR.delayTime.value = this.surroundDelay;
+  }
+
+  updateFilter() {
+    // Set some delay to surround channels
+    this.filterLowPassSW.type = 'lowpass'; // For subwoofer
+    this.filterLowPassSW.frequency.value = this.lowPassFreq;
+
+    this.filterHighPassL.type = 'highpass';
+    this.filterHighPassL.frequency.value = this.highPassFreq; // Hz;
+    this.filterHighPassR.type = 'highpass';
+    this.filterHighPassR.frequency.value = this.highPassFreq; // Hz;
+    this.filterHighPassC.type = 'highpass';
+    this.filterHighPassC.frequency.value = this.highPassFreq; // Hz;
+    this.filterHighPassSL.type = 'highpass';
+    this.filterHighPassSL.frequency.value = this.highPassFreq; // Hz;
+    this.filterHighPassSR.type = 'highpass';
+    this.filterHighPassSR.frequency.value = this.highPassFreq; // Hz;
+  }
+
 }

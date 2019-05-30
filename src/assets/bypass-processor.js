@@ -14,21 +14,12 @@ class BypassProcessor extends AudioWorkletProcessor {
   }
 
   process(inputs, outputs) {
-
     let input = inputs[0];
     let output = outputs[0];
 
     // for (let channel = 0; channel < output.length; ++channel) {
     //   output[channel].set(input[channel]);
     // }
-
-    // output[0].set(input[0]);
-    // output[1].set(input[1]);
-    // Below are invalid
-    // output[2].set(input[0] * 0.5 + input[1] * 0.5);
-    // output[3].set(input[0] + input[1]);
-    // output[4].set(input[1] - input[0]);
-    // output[5].set(input[0] - input[1]);
 
     for (let i = 0; i < output[0].length; ++i) { //It loops 128 times per second. (128Kbps)
       output[0][i] = input[0][i];

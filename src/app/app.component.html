@@ -1,3 +1,85 @@
-<input type="text" [(ngModel)]="url">
-<button (click)="playLocal()">Play</button>
-<!-- <div>Using audio worklet: {{ audioworkletRunning | async }}</div> -->
+<mat-card>
+  <mat-card-header>
+    <mat-card-title>Songs</mat-card-title>
+    <mat-card-subtitle>Main board to play songs</mat-card-subtitle>
+  </mat-card-header>
+  <mat-divider></mat-divider>
+  <form style="margin-top: 10px;">
+    <mat-form-field style="width: 85%;float: left;">
+      <input matInput #message maxlength="256" placeholder="SONG" type="text" [(ngModel)]="url"
+        [ngModelOptions]="{standalone: true}">
+      <mat-hint align="start"><strong>URL</strong> </mat-hint>
+      <mat-hint align="end">{{message.value.length}} / 256</mat-hint>
+    </mat-form-field>
+  </form>
+  <button (click)="playLocal()" mat-raised-button style="margin-right: 10px;">
+    <mat-icon>play_circle_filled_white</mat-icon>
+  </button>
+  <button (click)="disconnect()" mat-raised-button>
+    <mat-icon>stop</mat-icon>
+  </button>
+  <div style="height: 50px;">&nbsp;</div>
+  <div>
+    <mat-slide-toggle checked="true" (change)="slideToggle($event)">Use audio worklet if available</mat-slide-toggle>
+  </div>
+  <br>
+  <mat-divider></mat-divider>
+  <br>
+  <mat-slider style="width: 100%;" (mousedown)="sliderMouseDown = true" step="0.1" [max]="maxDurationInSec" [min]="0"
+    (mouseup)="resetSeek();sliderMouseDown = false" [(ngModel)]="currentSeek">
+  </mat-slider>
+  <br>
+  <mat-divider></mat-divider>
+  <br>
+
+  <div>Using audio worklet: {{ audioworkletRunning }}</div>
+  <div>Duration of song : {{ songDuration }}</div>
+  <div>Current time : {{ currentSeek }}</div>
+</mat-card>
+
+<br>
+<mat-card>
+  <mat-card-header>
+    <mat-card-title>Sound tweaker</mat-card-title>
+    <mat-card-subtitle>Audio controller</mat-card-subtitle>
+  </mat-card-header>
+  <mat-divider></mat-divider>
+
+  <div style="margin-top: 20px; width: 500px; float: left;">
+    <mat-card-subtitle>Channel delayer in miliseconds</mat-card-subtitle>
+    <mat-form-field style="width: 100px;float: left;margin-right: 10px;">
+      <input matInput #message maxlength="256" placeholder="Front" type="number" [(ngModel)]="frontDelay"
+        [ngModelOptions]="{standalone: true}">
+    </mat-form-field>
+    <mat-form-field style="width: 100px;float: left;margin-right: 10px;">
+      <input matInput #message maxlength="256" placeholder="Center" type="number" [(ngModel)]="centerDelay"
+        [ngModelOptions]="{standalone: true}">
+    </mat-form-field>
+    <mat-form-field style="width: 100px;float: left;margin-right: 10px;">
+      <input matInput #message maxlength="256" placeholder="Rear" type="number" [(ngModel)]="surroundDelay"
+        [ngModelOptions]="{standalone: true}">
+    </mat-form-field>
+    <mat-form-field style="width: 100px;float: left;margin-right: 10px;">
+      <input matInput #message maxlength="256" placeholder="Sub Woofer" type="number" [(ngModel)]="subWooferDelay"
+        [ngModelOptions]="{standalone: true}">
+    </mat-form-field>
+    <button (click)="updateDelay()" mat-raised-button style="margin-right: 10px;">
+      Update delay
+    </button>
+  </div>
+  <div style="margin-top: 20px; width: 550px;float: right;">
+    <mat-card-subtitle>Frequency pass filters in Hz</mat-card-subtitle>
+    <mat-form-field style="width: 250px;float: left;margin-right: 10px;">
+      <input matInput #message maxlength="256" placeholder="Subwoofer Low Pass Freq." type="number"
+        [(ngModel)]="lowPassFreq" [ngModelOptions]="{standalone: true}">
+    </mat-form-field>
+    <mat-form-field style="width: 250px;float: left;margin-right: 10px;">
+      <input matInput #message maxlength="256" placeholder="All Speakers High Pass Freq." type="number"
+        [(ngModel)]="HighPassFreq" [ngModelOptions]="{standalone: true}">
+    </mat-form-field>
+    <button (click)="updateFilter()" mat-raised-button style="margin-right: 10px;">
+      Update filter
+    </button>
+  </div>
+  <div style="height: 150px;">&nbsp;</div>
+</mat-card>
