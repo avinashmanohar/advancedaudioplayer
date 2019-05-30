@@ -19,7 +19,7 @@ export class AppComponent implements OnInit {
   }
 
   playLocal() {
-    // this.audio.playSound('../assets/audio/audio.mp3');
+    // this.audio.playSound('../assets/audio/audio8.mp3');
     this.audio.playSound(this.url);
   }
 }

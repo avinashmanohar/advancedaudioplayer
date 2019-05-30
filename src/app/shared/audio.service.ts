@@ -15,11 +15,7 @@ export class AudioService {
   // public audioworkletRunning: Subject<boolean>;
 
   constructor() {
-    try {
-      this.context = new AudioContext();
-    } catch (e) {
-      console.log('No audio');
-    }
+
   }
 
   playSound(url: string) {
@@ -42,7 +38,14 @@ export class AudioService {
       this.source.stop(0);
     }
 
+    try {
+      this.context = new AudioContext();
+    } catch (e) {
+      console.log('No audio');
+    }
+
     console.log(this.context.destination.maxChannelCount);
+    console.log(this.context.currentTime);
     if (this.context.destination.maxChannelCount >= 6) {
       this.context.destination.channelCount = 6;
     } else {
@@ -87,6 +90,10 @@ export class AudioService {
     const gainSL = this.context.createGain();
     const gainSR = this.context.createGain();
 
+    const delayL = this.context.createDelay();
+    const delayR = this.context.createDelay();
+    const delayC = this.context.createDelay();
+    const delaySW = this.context.createDelay();
     const delaySL = this.context.createDelay();
     const delaySR = this.context.createDelay();
 
@@ -123,7 +130,7 @@ export class AudioService {
     }
     this.processor.connect(this.mix);
 
-    console.log(this.mix);
+    // console.log(this.mix);
     // Assign nodes of every channel saperately
     this.mix.connect(splitter);
     splitter.connect(gainL, 0); // Assign left to gainL
@@ -141,21 +148,35 @@ export class AudioService {
     gainSL.gain.value = 1;
     gainSR.gain.value = 1;
 
-    // Connect delay to surround channels
+    // Connect delay to channels
+    gainL.connect(delayL);
+    gainR.connect(delayR);
+    gainC.connect(delayC);
+    gainSW.connect(delaySW);
     gainSL.connect(delaySL);
     gainSR.connect(delaySR);
 
     // Set some delay to surround channels
-    const delay = 50 / 1000;
-    delaySL.delayTime.value = delay;
-    delaySR.delayTime.value = delay;
+    const centerDelay = 0 / 1000;
+    delayC.delayTime.value = centerDelay;
+
+    const subWooferDelay = 0 / 1000;
+    delaySW.delayTime.value = subWooferDelay;
+
+    const frontDelay = 10 / 1000;
+    delayL.delayTime.value = frontDelay;
+    delayR.delayTime.value = frontDelay;
+
+    const surroundDelay = 50 / 1000;
+    delaySL.delayTime.value = surroundDelay;
+    delaySR.delayTime.value = surroundDelay;
 
 
-    gainSW.connect(filterLowPassSW);
+    delaySW.connect(filterLowPassSW);
 
-    gainL.connect(filterHighPassL);
-    gainR.connect(filterHighPassR);
-    gainC.connect(filterHighPassC);
+    delayL.connect(filterHighPassL);
+    delayR.connect(filterHighPassR);
+    delayC.connect(filterHighPassC);
     delaySL.connect(filterHighPassSL);
     delaySR.connect(filterHighPassSR);
 
