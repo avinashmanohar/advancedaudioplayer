@@ -33,6 +33,12 @@ export class AudioService {
   private filterHighPassSR: BiquadFilterNode;
   private filterLowPassSW: BiquadFilterNode;
 
+  private filterHighShelfL: BiquadFilterNode;
+  private filterHighShelfR: BiquadFilterNode;
+  private filterHighShelfC: BiquadFilterNode;
+  private filterHighShelfSL: BiquadFilterNode;
+  private filterHighShelfSR: BiquadFilterNode;
+
   public audioworkletRunning: Subject<boolean>;
   public songDuration: Subject<number>;
 
@@ -47,6 +53,9 @@ export class AudioService {
   // Filger variables
   public highPassFreq = 300;
   public lowPassFreq = 60;
+  public highShelfFreq = 16000;
+  public highShelfQ = 1;
+  public highShelfGain = 0;
 
   playSound(url: string, position: number) {
     // const request = new XMLHttpRequest();
@@ -146,6 +155,12 @@ export class AudioService {
     this.filterHighPassSL = this.context.createBiquadFilter();
     this.filterHighPassSR = this.context.createBiquadFilter();
 
+    this.filterHighShelfL = this.context.createBiquadFilter();
+    this.filterHighShelfR = this.context.createBiquadFilter();
+    this.filterHighShelfC = this.context.createBiquadFilter();
+    this.filterHighShelfSL = this.context.createBiquadFilter();
+    this.filterHighShelfSR = this.context.createBiquadFilter();
+
     this.filterLowPassSW = this.context.createBiquadFilter();
     // Required stuff start ends
 
@@ -212,14 +227,24 @@ export class AudioService {
 
     this.delaySW.connect(this.filterLowPassSW);
 
-    this.delayL.connect(this.filterHighPassL);
-    this.delayR.connect(this.filterHighPassR);
-    this.delayC.connect(this.filterHighPassC);
-    this.delaySL.connect(this.filterHighPassSL);
-    this.delaySR.connect(this.filterHighPassSR);
+    this.delayL.connect(this.filterHighShelfL);
+    this.delayR.connect(this.filterHighShelfR);
+    this.delayC.connect(this.filterHighShelfC);
+    this.delaySL.connect(this.filterHighShelfSL);
+    this.delaySR.connect(this.filterHighShelfSR);
 
     // Filters
-    this.updateFilter();
+    this.updateHighShelfFilter();
+    // Filters ends
+
+    this.filterHighShelfL.connect(this.filterHighPassL);
+    this.filterHighShelfR.connect(this.filterHighPassR);
+    this.filterHighShelfC.connect(this.filterHighPassC);
+    this.filterHighShelfSL.connect(this.filterHighPassSL);
+    this.filterHighShelfSR.connect(this.filterHighPassSR);
+
+    // Filters
+    this.updateHighPassFilter();
     // Filters ends
 
     this.filterHighPassL.connect(merger, 0, 0); // Left
@@ -293,12 +318,12 @@ export class AudioService {
     this.delayC.delayTime.value = this.centerDelay;
     this.delaySW.delayTime.value = this.subWooferDelay;
     this.delayL.delayTime.value = this.frontDelay;
-    this.delayR.delayTime.value = 0; // testing
+    this.delayR.delayTime.value = this.frontDelay; // 0; // testing
     this.delaySL.delayTime.value = this.surroundDelay;
     this.delaySR.delayTime.value = this.surroundDelay;
   }
 
-  updateFilter() {
+  updateHighPassFilter() {
     // Set some delay to surround channels
     this.filterLowPassSW.type = 'lowpass'; // For subwoofer
     this.filterLowPassSW.frequency.value = this.lowPassFreq;
@@ -313,6 +338,34 @@ export class AudioService {
     this.filterHighPassSL.frequency.value = this.highPassFreq; // Hz;
     this.filterHighPassSR.type = 'highpass';
     this.filterHighPassSR.frequency.value = this.highPassFreq; // Hz;
+  }
+
+  updateHighShelfFilter() {
+
+    this.filterHighShelfL.type = 'highshelf';
+    this.filterHighShelfL.frequency.value = this.highShelfFreq; // Hz;
+    this.filterHighShelfL.Q.value = this.highShelfQ;
+    this.filterHighShelfL.gain.value = this.highShelfGain;
+
+    this.filterHighShelfR.type = 'highshelf';
+    this.filterHighShelfR.frequency.value = this.highShelfFreq; // Hz;
+    this.filterHighShelfR.Q.value = this.highShelfQ;
+    this.filterHighShelfR.gain.value = this.highShelfGain;
+
+    this.filterHighShelfC.type = 'highshelf';
+    this.filterHighShelfC.frequency.value = this.highShelfFreq; // Hz;
+    this.filterHighShelfC.Q.value = this.highShelfQ;
+    this.filterHighShelfC.gain.value = this.highShelfGain;
+
+    this.filterHighShelfSL.type = 'highshelf';
+    this.filterHighShelfSL.frequency.value = this.highShelfFreq; // Hz;
+    this.filterHighShelfSL.Q.value = this.highShelfQ;
+    this.filterHighShelfSL.gain.value = this.highShelfGain;
+
+    this.filterHighShelfSR.type = 'highshelf';
+    this.filterHighShelfSR.frequency.value = this.highShelfFreq; // Hz;
+    this.filterHighShelfSR.Q.value = this.highShelfQ;
+    this.filterHighShelfSR.gain.value = this.highShelfGain;
   }
 
 }

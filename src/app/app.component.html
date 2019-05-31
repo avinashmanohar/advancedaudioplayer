@@ -75,11 +75,32 @@
     </mat-form-field>
     <mat-form-field style="width: 250px;float: left;margin-right: 10px;">
       <input matInput #message maxlength="256" placeholder="All Speakers High Pass Freq." type="number"
-        [(ngModel)]="HighPassFreq" [ngModelOptions]="{standalone: true}">
+        [(ngModel)]="highPassFreq" [ngModelOptions]="{standalone: true}">
     </mat-form-field>
-    <button (click)="updateFilter()" mat-raised-button style="margin-right: 10px;">
+    <button (click)="updateHighPassFilter()" mat-raised-button style="margin-right: 10px;">
       Update filter
     </button>
   </div>
   <div style="height: 150px;">&nbsp;</div>
+
+
+  <div style="margin-top: 50px; width: 550px;">
+    <mat-card-subtitle>Highshelf freq. in Hz</mat-card-subtitle>
+    <mat-form-field style="width: 100px;float: left;margin-right: 10px;">
+      <input matInput #message maxlength="256" placeholder="Highshelf Freq." type="number" [(ngModel)]="highShelfFreq"
+        [ngModelOptions]="{standalone: true}">
+    </mat-form-field>
+    <mat-form-field style="width: 100px;float: left;margin-right: 10px;">
+      <input matInput #message maxlength="256" placeholder="Q value" type="number" [(ngModel)]="highShelfQ"
+        [ngModelOptions]="{standalone: true}">
+    </mat-form-field>
+    <mat-form-field style="width: 100px;float: left;margin-right: 10px;">
+      <input matInput #message maxlength="256" placeholder="Highshelf Gain" type="number" [(ngModel)]="highShelfGain"
+        [ngModelOptions]="{standalone: true}">
+    </mat-form-field>
+    <button (click)="updateHighShelfFilter()" mat-raised-button style="margin-right: 10px;">
+      Update filter
+    </button>
+  </div>
+
 </mat-card>
