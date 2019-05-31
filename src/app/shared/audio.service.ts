@@ -45,7 +45,7 @@ export class AudioService {
   public useWorklet = true;
 
   // Delay variables
-  public frontDelay = 10 / 1000;
+  public frontDelay = 0 / 1000;
   public surroundDelay = 50 / 1000;
   public subWooferDelay = 0 / 1000;
   public centerDelay = 0 / 1000;
@@ -53,9 +53,8 @@ export class AudioService {
   // Filger variables
   public highPassFreq = 300;
   public lowPassFreq = 60;
-  public highShelfFreq = 16000;
-  public highShelfQ = 1;
-  public highShelfGain = 0;
+  public highShelfFreq = 12000;
+  public highShelfGain = 20;
 
   playSound(url: string, position: number) {
     // const request = new XMLHttpRequest();
@@ -344,27 +343,22 @@ export class AudioService {
 
     this.filterHighShelfL.type = 'highshelf';
     this.filterHighShelfL.frequency.value = this.highShelfFreq; // Hz;
-    this.filterHighShelfL.Q.value = this.highShelfQ;
     this.filterHighShelfL.gain.value = this.highShelfGain;
 
     this.filterHighShelfR.type = 'highshelf';
     this.filterHighShelfR.frequency.value = this.highShelfFreq; // Hz;
-    this.filterHighShelfR.Q.value = this.highShelfQ;
     this.filterHighShelfR.gain.value = this.highShelfGain;
 
     this.filterHighShelfC.type = 'highshelf';
     this.filterHighShelfC.frequency.value = this.highShelfFreq; // Hz;
-    this.filterHighShelfC.Q.value = this.highShelfQ;
     this.filterHighShelfC.gain.value = this.highShelfGain;
 
     this.filterHighShelfSL.type = 'highshelf';
     this.filterHighShelfSL.frequency.value = this.highShelfFreq; // Hz;
-    this.filterHighShelfSL.Q.value = this.highShelfQ;
     this.filterHighShelfSL.gain.value = this.highShelfGain;
 
     this.filterHighShelfSR.type = 'highshelf';
     this.filterHighShelfSR.frequency.value = this.highShelfFreq; // Hz;
-    this.filterHighShelfSR.Q.value = this.highShelfQ;
     this.filterHighShelfSR.gain.value = this.highShelfGain;
   }
 

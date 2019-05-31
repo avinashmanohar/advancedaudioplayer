@@ -21,12 +21,12 @@ export class AppComponent implements OnInit {
 
   sliderMouseDown = false;
 
-  // url = 'https://raw.githubusercontent.com/mdn/webaudio-examples/master/multi-track/drums.mp3';
-  url = '../assets/audio/audio7.mp3';
+  url = 'https://raw.githubusercontent.com/mdn/webaudio-examples/master/multi-track/drums.mp3';
+  // url = '../assets/audio/audio6.mp3';
   seekSubscription: Subscription;
 
   // Delay variables
-  frontDelay = 10;
+  frontDelay = 0;
   centerDelay = 0;
   surroundDelay = 50;
   subWooferDelay = 0;
@@ -35,9 +35,8 @@ export class AppComponent implements OnInit {
   lowPassFreq = 60;
   highPassFreq = 300; // Hz
 
-  highShelfFreq = 16000; // Hz
-  highShelfQ = 1; // Hz
-  highShelfGain = 0; // Hz
+  highShelfFreq = 12000; // Hz
+  highShelfGain = 20; // Hz
 
   ngOnInit() {
     this.audio.audioworkletRunning.subscribe(d => {
@@ -134,7 +133,6 @@ export class AppComponent implements OnInit {
   updateHighShelfFilter() {
     console.log('Update highshelf filter');
     this.audio.highShelfFreq = this.highShelfFreq;
-    this.audio.highShelfQ = this.highShelfQ;
     this.audio.highShelfGain = this.highShelfGain;
     this.audio.updateHighShelfFilter();
   }
