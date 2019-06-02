@@ -154,6 +154,8 @@ export class AppComponent implements OnInit {
     console.log('Update highpass filter');
     this.audio.lowPassFreq = this.lowPassFreq;
     this.audio.highPassFreq = this.highPassFreq;
+    this.audio.lowPassQ = this.lowPassQ;
+    this.audio.highPassQ = this.highPassQ;
     this.audio.updateHighPassFilter();
   }
 
