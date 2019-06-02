@@ -15,6 +15,7 @@ import { MatInputModule } from '@angular/material/input';
 import { MatDividerModule } from '@angular/material/divider';
 import { MatSliderModule } from '@angular/material/slider';
 import { MatIconModule } from '@angular/material/icon';
+import { MatChipsModule } from '@angular/material/chips';
 
 
 @NgModule({
@@ -32,7 +33,8 @@ import { MatIconModule } from '@angular/material/icon';
     MatInputModule,
     MatDividerModule,
     MatSliderModule,
-    MatIconModule
+    MatIconModule,
+    MatChipsModule
   ],
   providers: [],
   bootstrap: [AppComponent]

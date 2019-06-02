@@ -1,6 +1,6 @@
 import { Component, OnInit, ChangeDetectorRef } from '@angular/core';
 import { AudioService } from './shared/audio.service';
-import { timer, interval, Subscription } from 'rxjs';
+import { interval, Subscription } from 'rxjs';
 import { MatSlideToggleChange } from '@angular/material/slide-toggle';
 import { HelperService } from './shared/helper.service';
 
@@ -13,17 +13,27 @@ export class AppComponent implements OnInit {
 
   constructor(private audio: AudioService, private ref: ChangeDetectorRef, private helper: HelperService) { }
   title = 'advancedaudioplayer';
-  audioworkletRunning = '-';
-  songDuration: string;
+  audioworkletRunning = 'NA';
+  channelCount = 0;
+  songDuration = '0';
 
   maxDurationInSec = 0;
   currentSeek = 0;
+  currentSeekMS = '0';
 
   sliderMouseDown = false;
 
   url = 'https://raw.githubusercontent.com/mdn/webaudio-examples/master/multi-track/drums.mp3';
+  fileName: string;
   // url = '../assets/audio/audio6.mp3';
   seekSubscription: Subscription;
+
+  // Volume controller
+  masterGain = 100;
+  frontGain = 100;
+  surroundGain = 100;
+  centerGain = 100;
+  subwooferGain = 100;
 
   // Delay variables
   frontDelay = 0;
@@ -33,10 +43,12 @@ export class AppComponent implements OnInit {
 
   // Filters variables
   lowPassFreq = 60;
+  lowPassQ = 0;
   highPassFreq = 300; // Hz
+  highPassQ = 0;
 
   highShelfFreq = 12000; // Hz
-  highShelfGain = 20; // Hz
+  highShelfGain = 10; // Hz
 
   ngOnInit() {
     this.audio.audioworkletRunning.subscribe(d => {
@@ -47,6 +59,8 @@ export class AppComponent implements OnInit {
       }
       this.ref.detectChanges();
     });
+
+    this.audio.channelCount.subscribe(n => this.channelCount = n);
 
     this.audio.songDuration
       .subscribe(secs => {
@@ -61,6 +75,17 @@ export class AppComponent implements OnInit {
 
       });
 
+  }
+
+  playFile(event: FileList) {
+    // The File object
+    const file = event.item(0);
+    this.fileName = file.name;
+    const reader = new FileReader();
+    reader.readAsDataURL(file);
+    reader.onload = (e: any) => {
+      this.url = e.target.result;
+    }
   }
 
   playLocal() {
@@ -92,10 +117,12 @@ export class AppComponent implements OnInit {
     this.seekSubscription = source.subscribe(ts => {
       if (this.currentSeek > this.maxDurationInSec) {
         this.currentSeek = this.maxDurationInSec;
+        this.currentSeekMS = this.helper.convertPlaybackTime(this.currentSeek);
         this.disconnect();
       }
       if (!this.sliderMouseDown) {
         this.currentSeek += 0.125;
+        this.currentSeekMS = this.helper.convertPlaybackTime(this.currentSeek);
       }
 
       this.ref.detectChanges();
@@ -135,5 +162,15 @@ export class AppComponent implements OnInit {
     this.audio.highShelfFreq = this.highShelfFreq;
     this.audio.highShelfGain = this.highShelfGain;
     this.audio.updateHighShelfFilter();
+  }
+
+  updateGain() {
+    console.log('Update volume');
+    this.audio.masterGain = this.masterGain;
+    this.audio.frontGain = this.frontGain;
+    this.audio.centerGain = this.centerGain;
+    this.audio.subwooferGain = this.subwooferGain;
+    this.audio.surroundGain = this.surroundGain;
+    this.audio.updateGain();
   }
 }

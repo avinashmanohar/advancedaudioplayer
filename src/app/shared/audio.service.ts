@@ -12,12 +12,20 @@ export class AudioService {
   constructor(private http: HttpClient, private helper: HelperService) {
     this.audioworkletRunning = new Subject<boolean>();
     this.songDuration = new Subject<number>();
+    this.channelCount = new Subject<number>();
   }
   public context: AudioContext;
 
   private source: AudioBufferSourceNode;
   private processor: ScriptProcessorNode | AudioWorkletNode;
   private allGain: GainNode;
+
+  private gainL: GainNode;
+  private gainR: GainNode;
+  private gainC: GainNode;
+  private gainSW: GainNode;
+  private gainSL: GainNode;
+  private gainSR: GainNode;
 
   private delayL: DelayNode;
   private delayR: DelayNode;
@@ -41,8 +49,16 @@ export class AudioService {
 
   public audioworkletRunning: Subject<boolean>;
   public songDuration: Subject<number>;
+  public channelCount: Subject<number>;
 
-  public useWorklet = true;
+  public useWorklet = false;
+
+  // Volume variables
+  public masterGain = 100;
+  public frontGain = 100;
+  public surroundGain = 100;
+  public centerGain = 100;
+  public subwooferGain = 100;
 
   // Delay variables
   public frontDelay = 0 / 1000;
@@ -52,24 +68,13 @@ export class AudioService {
 
   // Filger variables
   public highPassFreq = 300;
+  public highPassQ = 0;
   public lowPassFreq = 60;
+  public lowPassQ = 0;
   public highShelfFreq = 12000;
-  public highShelfGain = 20;
+  public highShelfGain = 10;
 
   playSound(url: string, position: number) {
-    // const request = new XMLHttpRequest();
-    // request.open('GET', url, true);
-    // request.responseType = 'arraybuffer';
-
-    // // Our asynchronous callback
-    // request.onload = () => {
-    //   const data = request.response;
-    //   this.processAudio(data);
-    //   // showData(data);
-    // };
-
-    // request.send();
-
     this.http.get(url, {
       responseType: 'arraybuffer'
     }).subscribe(data => this.processAudio(data, position));
@@ -86,15 +91,13 @@ export class AudioService {
       console.log('No audio');
     }
 
-    // console.log(this.context.baseLatency); // 0.01
-
-    // console.log(this.context.destination.maxChannelCount);
-    // console.log(this.context.currentTime);
     if (this.context.destination.maxChannelCount >= 6) {
       this.context.destination.channelCount = 6;
     } else {
       this.context.destination.channelCount = 2;
     }
+
+    this.channelCount.next(this.context.destination.channelCount);
 
     this.context.destination.channelCountMode = 'explicit';
     this.context.destination.channelInterpretation = 'discrete';
@@ -117,6 +120,7 @@ export class AudioService {
     }
   }
 
+
   async createAudio(position: number) {
     // create the gain node
 
@@ -127,19 +131,19 @@ export class AudioService {
     // Visual controls ends
 
     this.allGain = this.context.createGain();
-    this.allGain.gain.value = 1; // set to max vol;
+    // this.allGain.gain.value = 1; // set to max vol; Taken care in updateGain function
 
 
 
     // Required stuff start
     const splitter = this.context.createChannelSplitter(6);
     const merger = this.context.createChannelMerger(6);
-    const gainL = this.context.createGain();
-    const gainR = this.context.createGain();
-    const gainC = this.context.createGain();
-    const gainSW = this.context.createGain();
-    const gainSL = this.context.createGain();
-    const gainSR = this.context.createGain();
+    this.gainL = this.context.createGain();
+    this.gainR = this.context.createGain();
+    this.gainC = this.context.createGain();
+    this.gainSW = this.context.createGain();
+    this.gainSL = this.context.createGain();
+    this.gainSR = this.context.createGain();
 
     this.delayL = this.context.createDelay();
     this.delayR = this.context.createDelay();
@@ -197,28 +201,23 @@ export class AudioService {
     // console.log(this.mix);
     // Assign nodes of every channel saperately
     this.allGain.connect(splitter);
-    splitter.connect(gainL, 0); // Assign left to gainL
-    splitter.connect(gainR, 1); // Assign right to gainR
-    splitter.connect(gainC, 2); // Assign Center to gainC
-    splitter.connect(gainSW, 3); // Assign Sub Woofer to gainSW
-    splitter.connect(gainSL, 4); // Assign Surround Left to gainSL
-    splitter.connect(gainSR, 5); // Assign Surround Right to gainSR
+    splitter.connect(this.gainL, 0); // Assign left to gainL
+    splitter.connect(this.gainR, 1); // Assign right to gainR
+    splitter.connect(this.gainC, 2); // Assign Center to gainC
+    splitter.connect(this.gainSW, 3); // Assign Sub Woofer to gainSW
+    splitter.connect(this.gainSL, 4); // Assign Surround Left to gainSL
+    splitter.connect(this.gainSR, 5); // Assign Surround Right to gainSR
 
     // set gain for channels
-    gainL.gain.value = 1;
-    gainR.gain.value = 1;
-    gainC.gain.value = 1;
-    gainSW.gain.value = 1;
-    gainSL.gain.value = 1;
-    gainSR.gain.value = 1;
+    this.updateGain();
 
     // Connect delay to channels
-    gainL.connect(this.delayL);
-    gainR.connect(this.delayR);
-    gainC.connect(this.delayC);
-    gainSW.connect(this.delaySW);
-    gainSL.connect(this.delaySL);
-    gainSR.connect(this.delaySR);
+    this.gainL.connect(this.delayL);
+    this.gainR.connect(this.delayR);
+    this.gainC.connect(this.delayC);
+    this.gainSW.connect(this.delaySW);
+    this.gainSL.connect(this.delaySL);
+    this.gainSR.connect(this.delaySR);
 
     // Set some delay to surround channels
     this.updateDelay();
@@ -326,17 +325,23 @@ export class AudioService {
     // Set some delay to surround channels
     this.filterLowPassSW.type = 'lowpass'; // For subwoofer
     this.filterLowPassSW.frequency.value = this.lowPassFreq;
+    this.filterLowPassSW.Q.value = this.lowPassQ;
 
     this.filterHighPassL.type = 'highpass';
     this.filterHighPassL.frequency.value = this.highPassFreq; // Hz;
+    this.filterHighPassL.Q.value = this.highPassQ; // Hz;
     this.filterHighPassR.type = 'highpass';
     this.filterHighPassR.frequency.value = this.highPassFreq; // Hz;
+    this.filterHighPassR.Q.value = this.highPassQ; // Hz;
     this.filterHighPassC.type = 'highpass';
     this.filterHighPassC.frequency.value = this.highPassFreq; // Hz;
+    this.filterHighPassC.Q.value = this.highPassQ; // Hz;
     this.filterHighPassSL.type = 'highpass';
     this.filterHighPassSL.frequency.value = this.highPassFreq; // Hz;
+    this.filterHighPassSL.Q.value = this.highPassQ; // Hz;
     this.filterHighPassSR.type = 'highpass';
     this.filterHighPassSR.frequency.value = this.highPassFreq; // Hz;
+    this.filterHighPassSR.Q.value = this.highPassQ; // Hz;
   }
 
   updateHighShelfFilter() {
@@ -362,4 +367,14 @@ export class AudioService {
     this.filterHighShelfSR.gain.value = this.highShelfGain;
   }
 
+
+  updateGain() {
+    this.allGain.gain.value = this.masterGain / 100;
+    this.gainL.gain.value = this.frontGain / 100;
+    this.gainR.gain.value = this.frontGain / 100
+    this.gainC.gain.value = this.centerGain / 100;
+    this.gainSW.gain.value = this.subwooferGain / 100;
+    this.gainSL.gain.value = this.surroundGain / 100;
+    this.gainSR.gain.value = this.surroundGain / 100;
+  }
 }

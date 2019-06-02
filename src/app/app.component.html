@@ -1,102 +1,256 @@
-<mat-card>
-  <mat-card-header>
-    <mat-card-title>Songs</mat-card-title>
-    <mat-card-subtitle>Main board to play songs</mat-card-subtitle>
-  </mat-card-header>
-  <mat-divider></mat-divider>
-  <form style="margin-top: 10px;">
-    <mat-form-field style="width: 85%;float: left;">
-      <input matInput #message maxlength="256" placeholder="SONG" type="text" [(ngModel)]="url"
-        [ngModelOptions]="{standalone: true}">
-      <mat-hint align="start"><strong>URL</strong> </mat-hint>
-      <mat-hint align="end">{{message.value.length}} / 256</mat-hint>
-    </mat-form-field>
-  </form>
-  <button (click)="playLocal()" mat-raised-button style="margin-right: 10px;">
-    <mat-icon>play_circle_filled_white</mat-icon>
-  </button>
-  <button (click)="disconnect()" mat-raised-button>
-    <mat-icon>stop</mat-icon>
-  </button>
-  <div style="height: 50px;">&nbsp;</div>
-  <div>
-    <mat-slide-toggle checked="true" (change)="slideToggle($event)">Use audio worklet if available</mat-slide-toggle>
-  </div>
-  <br>
-  <mat-divider></mat-divider>
-  <br>
-  <mat-slider style="width: 100%;" (mousedown)="sliderMouseDown = true" step="0.1" [max]="maxDurationInSec" [min]="0"
-    (mouseup)="resetSeek();sliderMouseDown = false" [(ngModel)]="currentSeek">
-  </mat-slider>
-  <br>
-  <mat-divider></mat-divider>
-  <br>
+<div class="container align-middle">
+  <div class="row">
+    <div class="col-12">
+      <mat-card>
+        <mat-card-header>
+          <mat-card-title>Songs</mat-card-title>
+          <mat-card-subtitle>Main board to play songs</mat-card-subtitle>
+        </mat-card-header>
+        <mat-divider></mat-divider>
+        <form style="margin-top: 10px;">
+          <mat-form-field style="width: 80%;float: left;" *ngIf="false">
+            <input matInput #message maxlength="256" placeholder="SONG" type="text" [(ngModel)]="url"
+              [ngModelOptions]="{standalone: true}">
+            <mat-hint align="start"><strong>URL</strong> </mat-hint>
+            <mat-hint align="end">{{message.value.length}} / 256</mat-hint>
+          </mat-form-field>
+        </form>
+        <input class="file-input" type="file" (change)="playFile($event.target.files)" accept="mp3/*" #file hidden>
+        <button (click)="file.click()" color="accent" style="margin-right: 10px;" mat-raised-button>
+          <mat-icon>folder_open</mat-icon>
+        </button>
 
-  <div>Using audio worklet: {{ audioworkletRunning }}</div>
-  <div>Duration of song : {{ songDuration }}</div>
-  <div>Current time : {{ currentSeek }}</div>
-</mat-card>
+        <button (click)="playLocal()" color="primary" mat-raised-button style="margin-right: 10px;">
+          <mat-icon>play_circle_filled_white</mat-icon>
+        </button>
+        <button (click)="disconnect()" color="warn" mat-raised-button>
+          <mat-icon>stop</mat-icon>
+        </button>
 
-<br>
-<mat-card>
-  <mat-card-header>
-    <mat-card-title>Sound tweaker</mat-card-title>
-    <mat-card-subtitle>Audio controller</mat-card-subtitle>
-  </mat-card-header>
-  <mat-divider></mat-divider>
+        <div>
+          <div style="height: 15px;">&nbsp;</div>
+          <mat-chip-list *ngIf="fileName">Song: <mat-chip>{{ fileName }}</mat-chip>
+          </mat-chip-list>
+          <div style="height: 15px;">&nbsp;</div>
+          <mat-slide-toggle checked="false" (change)="slideToggle($event)">Use audio worklet if available
+          </mat-slide-toggle>
+          <mat-chip-list>Using audio worklet: <mat-chip>{{ audioworkletRunning }}</mat-chip>
+          </mat-chip-list>
+        </div>
+        <br>
+        <mat-divider></mat-divider>
+        <br>
+        <mat-slider style="width: 100%;" (mousedown)="sliderMouseDown = true" step="0.1" [max]="maxDurationInSec"
+          [min]="0" (mouseup)="resetSeek();sliderMouseDown = false" [(ngModel)]="currentSeek">
+        </mat-slider>
+        <br>
+        <mat-divider></mat-divider>
+        <br>
 
-  <div style="margin-top: 20px; width: 500px; float: left;">
-    <mat-card-subtitle>Channel delayer in miliseconds</mat-card-subtitle>
-    <mat-form-field style="width: 100px;float: left;margin-right: 10px;">
-      <input matInput #message maxlength="256" placeholder="Front" type="number" [(ngModel)]="frontDelay"
-        [ngModelOptions]="{standalone: true}">
-    </mat-form-field>
-    <mat-form-field style="width: 100px;float: left;margin-right: 10px;">
-      <input matInput #message maxlength="256" placeholder="Center" type="number" [(ngModel)]="centerDelay"
-        [ngModelOptions]="{standalone: true}">
-    </mat-form-field>
-    <mat-form-field style="width: 100px;float: left;margin-right: 10px;">
-      <input matInput #message maxlength="256" placeholder="Rear" type="number" [(ngModel)]="surroundDelay"
-        [ngModelOptions]="{standalone: true}">
-    </mat-form-field>
-    <mat-form-field style="width: 100px;float: left;margin-right: 10px;">
-      <input matInput #message maxlength="256" placeholder="Sub Woofer" type="number" [(ngModel)]="subWooferDelay"
-        [ngModelOptions]="{standalone: true}">
-    </mat-form-field>
-    <button (click)="updateDelay()" mat-raised-button style="margin-right: 10px;">
-      Update delay
-    </button>
-  </div>
-  <div style="margin-top: 20px; width: 550px;float: right;">
-    <mat-card-subtitle>Frequency pass filters in Hz</mat-card-subtitle>
-    <mat-form-field style="width: 250px;float: left;margin-right: 10px;">
-      <input matInput #message maxlength="256" placeholder="Subwoofer Low Pass Freq." type="number"
-        [(ngModel)]="lowPassFreq" [ngModelOptions]="{standalone: true}">
-    </mat-form-field>
-    <mat-form-field style="width: 250px;float: left;margin-right: 10px;">
-      <input matInput #message maxlength="256" placeholder="All Speakers High Pass Freq." type="number"
-        [(ngModel)]="highPassFreq" [ngModelOptions]="{standalone: true}">
-    </mat-form-field>
-    <button (click)="updateHighPassFilter()" mat-raised-button style="margin-right: 10px;">
-      Update filter
-    </button>
-  </div>
-  <div style="height: 150px;">&nbsp;</div>
+        <table>
+          <tr>
+            <td>Current seek</td>
+            <td>
+              <mat-chip-list>
+                <mat-chip color="primary" selected>{{ currentSeekMS }}</mat-chip>
+              </mat-chip-list>
+            </td>
+          </tr>
+          <tr>
+            <td>Duration of song</td>
+            <td>
+              <mat-chip-list>
+                <mat-chip color="primary" selected>{{ songDuration }}</mat-chip>
+              </mat-chip-list>
+            </td>
+          </tr>
+          <tr>
+            <td>Output channels</td>
+            <td>
+              <mat-chip-list>
+                <mat-chip color="accent" selected>{{ channelCount }}</mat-chip>
+              </mat-chip-list>
+            </td>
+          </tr>
+        </table>
 
 
-  <div style="margin-top: 50px; width: 550px;">
-    <mat-card-subtitle>Highshelf freq. in Hz</mat-card-subtitle>
-    <mat-form-field style="width: 100px;float: left;margin-right: 10px;">
-      <input matInput #message maxlength="256" placeholder="Highshelf Freq." type="number" [(ngModel)]="highShelfFreq"
-        [ngModelOptions]="{standalone: true}">
-    </mat-form-field>
-    <mat-form-field style="width: 100px;float: left;margin-right: 10px;">
-      <input matInput #message maxlength="256" placeholder="Highshelf Gain" type="number" [(ngModel)]="highShelfGain"
-        [ngModelOptions]="{standalone: true}">
-    </mat-form-field>
-    <button (click)="updateHighShelfFilter()" mat-raised-button style="margin-right: 10px;">
-      Update filter
-    </button>
+
+      </mat-card>
+    </div>
   </div>
 
-</mat-card>
+  <div class="row" style="margin-top: 10px;">
+    <div class="col-12">
+      <mat-card>
+        <mat-card-header>
+          <mat-card-title>Sound tweaker</mat-card-title>
+          <mat-card-subtitle>Audio controller</mat-card-subtitle>
+        </mat-card-header>
+        <mat-divider></mat-divider>
+        <div class="row">
+          <div class="col">
+            <table style="margin:20px 10px;">
+              <tr>
+                <th colspan="4">
+                  <mat-card-subtitle>Volume controller</mat-card-subtitle>
+                </th>
+              </tr>
+              <tr>
+                <td>
+                  <mat-form-field style="width: 80px;margin: 5px;">
+                    <input matInput #message maxlength="256" placeholder="Master" type="number" [(ngModel)]="masterGain"
+                      [ngModelOptions]="{standalone: true}">
+                  </mat-form-field>
+                </td>
+                <td>
+                  <mat-form-field style="width: 80px;margin: 5px;">
+                    <input matInput #message maxlength="256" placeholder="Front" type="number" [(ngModel)]="frontGain"
+                      [ngModelOptions]="{standalone: true}">
+                  </mat-form-field>
+                </td>
+                <td>
+                  <mat-form-field style="width: 80px;margin: 5px;">
+                    <input matInput #message maxlength="256" placeholder="Center" type="number" [(ngModel)]="centerGain"
+                      [ngModelOptions]="{standalone: true}">
+                  </mat-form-field>
+                </td>
+                <td>
+                  <mat-form-field style="width: 80px;margin: 5px;">
+                    <input matInput #message maxlength="256" placeholder="Rear" type="number" [(ngModel)]="surroundGain"
+                      [ngModelOptions]="{standalone: true}">
+                  </mat-form-field>
+                </td>
+                <td>
+                  <mat-form-field style="width: 80px;margin: 5px;">
+                    <input matInput #message maxlength="256" placeholder="Sub Woofer" type="number"
+                      [(ngModel)]="subwooferGain" [ngModelOptions]="{standalone: true}">
+                  </mat-form-field>
+                </td>
+              </tr>
+              <tr>
+                <td colspan="4"> <button (click)="updateGain()" mat-raised-button style="margin-right: 10px;">
+                    Update Volume
+                  </button></td>
+              </tr>
+            </table>
+          </div>
+          <div class="col">
+            <table style="margin:20px 10px;">
+              <tr>
+                <th colspan="4">
+                  <mat-card-subtitle>Channel delayer in miliseconds</mat-card-subtitle>
+                </th>
+              </tr>
+              <tr>
+                <td>
+                  <mat-form-field style="width: 80px;margin: 5px;">
+                    <input matInput #message maxlength="256" placeholder="Front" type="number" [(ngModel)]="frontDelay"
+                      [ngModelOptions]="{standalone: true}">
+                  </mat-form-field>
+                </td>
+                <td>
+                  <mat-form-field style="width: 80px;margin: 5px;">
+                    <input matInput #message maxlength="256" placeholder="Center" type="number"
+                      [(ngModel)]="centerDelay" [ngModelOptions]="{standalone: true}">
+                  </mat-form-field>
+                </td>
+                <td>
+                  <mat-form-field style="width: 80px;margin: 5px;">
+                    <input matInput #message maxlength="256" placeholder="Rear" type="number"
+                      [(ngModel)]="surroundDelay" [ngModelOptions]="{standalone: true}">
+                  </mat-form-field>
+                </td>
+                <td>
+                  <mat-form-field style="width: 80px;margin: 5px;">
+                    <input matInput #message maxlength="256" placeholder="Sub Woofer" type="number"
+                      [(ngModel)]="subWooferDelay" [ngModelOptions]="{standalone: true}">
+                  </mat-form-field>
+                </td>
+              </tr>
+              <tr>
+                <td colspan="4"> <button (click)="updateDelay()" mat-raised-button style="margin-right: 10px;">
+                    Update delay
+                  </button></td>
+              </tr>
+            </table>
+          </div>
+          <div class="col">
+            <table style="margin:20px 10px;">
+              <tr>
+                <th colspan="2">
+                  <mat-card-subtitle>Highshelf freq. in Hz</mat-card-subtitle>
+                </th>
+              </tr>
+              <tr>
+                <td>
+                  <mat-form-field style="width: 100px;margin: 5px;">
+                    <input matInput #message maxlength="256" placeholder="Highshelf Freq." type="number"
+                      [(ngModel)]="highShelfFreq" [ngModelOptions]="{standalone: true}">
+                  </mat-form-field>
+                </td>
+                <td>
+                  <mat-form-field style="width: 100px;margin: 5px;">
+                    <input matInput #message maxlength="256" placeholder="Highshelf Gain" type="number"
+                      [(ngModel)]="highShelfGain" [ngModelOptions]="{standalone: true}">
+                  </mat-form-field>
+                </td>
+              </tr>
+              <tr>
+                <td colspan="2">
+                  <button (click)="updateHighShelfFilter()" mat-raised-button style="margin-right: 10px;">
+                    Update highshelf filter
+                  </button>
+                </td>
+              </tr>
+            </table>
+          </div>
+          <div class="col">
+            <table style="margin:20px 10px;">
+              <tr>
+                <th colspan="2">
+                  <mat-card-subtitle>Frequency pass filters in Hz</mat-card-subtitle>
+                </th>
+              </tr>
+              <tr>
+                <td>
+                  <mat-form-field style="width: 130px;;margin: 5px;">
+                    <input matInput #message maxlength="256" placeholder="Highpass Freq. [ 5 Ch ]" type="number"
+                      [(ngModel)]="highPassFreq" [ngModelOptions]="{standalone: true}">
+                  </mat-form-field>
+                </td>
+                <td>
+                  <mat-form-field style="width: 130px;margin: 5px;">
+                    <input matInput #message maxlength="256" placeholder="Lowpass Freq. [ .1 Ch ]" type="number"
+                      [(ngModel)]="lowPassFreq" [ngModelOptions]="{standalone: true}">
+                  </mat-form-field>
+                </td>
+              </tr>
+              <tr>
+                <td>
+                  <mat-form-field style="width: 130px;margin: 5px;">
+                    <input matInput #message maxlength="256" placeholder="Highpass Q [ 5 Ch ]" type="number"
+                      [(ngModel)]="highPassQ" [ngModelOptions]="{standalone: true}">
+                  </mat-form-field>
+                </td>
+                <td>
+                  <mat-form-field style="width: 130px;margin: 5px;">
+                    <input matInput #message maxlength="256" placeholder="Lowpass Q [ .1 Ch ]" type="number"
+                      [(ngModel)]="lowPassQ" [ngModelOptions]="{standalone: true}">
+                  </mat-form-field>
+                </td>
+              </tr>
+              <tr>
+                <td colspan="2">
+                  <button (click)="updateHighPassFilter()" mat-raised-button style="margin-right: 10px;">
+                    Update freq. pass filter
+                  </button>
+                </td>
+              </tr>
+            </table>
+          </div>
+        </div>
+      </mat-card>
+    </div>
+  </div>
+</div>
