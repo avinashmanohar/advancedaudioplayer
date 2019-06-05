@@ -1,17 +1,22 @@
-import { Component, OnInit, ChangeDetectorRef } from '@angular/core';
+import { Component, OnInit, ChangeDetectorRef, OnDestroy } from '@angular/core';
 import { AudioService } from './shared/audio.service';
 import { interval, Subscription } from 'rxjs';
 import { MatSlideToggleChange } from '@angular/material/slide-toggle';
 import { HelperService } from './shared/helper.service';
+import { LocalStorage } from '@ngx-pwa/local-storage';
 
 @Component({
   selector: 'app-root',
   templateUrl: './app.component.html',
   styleUrls: ['./app.component.scss']
 })
-export class AppComponent implements OnInit {
+export class AppComponent implements OnInit, OnDestroy {
 
-  constructor(private audio: AudioService, private ref: ChangeDetectorRef, private helper: HelperService) { }
+  constructor(
+    private audio: AudioService,
+    private ref: ChangeDetectorRef,
+    private helper: HelperService,
+    private localStorage: LocalStorage) { }
   title = 'advancedaudioplayer';
   audioworkletRunning = 'NA';
   channelCount = 0;
@@ -51,6 +56,7 @@ export class AppComponent implements OnInit {
   highShelfGain = 10; // Hz
 
   ngOnInit() {
+    this.getSettings(); // Get values from localStorage
     this.audio.audioworkletRunning.subscribe(d => {
       if (d) {
         this.audioworkletRunning = 'Yes';
@@ -85,7 +91,7 @@ export class AppComponent implements OnInit {
     reader.readAsDataURL(file);
     reader.onload = (e: any) => {
       this.url = e.target.result;
-    }
+    };
   }
 
   playLocal() {
@@ -148,6 +154,7 @@ export class AppComponent implements OnInit {
     this.audio.subWooferDelay = this.subWooferDelay / 1000;
     this.audio.surroundDelay = this.surroundDelay / 1000;
     this.audio.updateDelay();
+    this.storeSettings();
   }
 
   updateHighPassFilter() {
@@ -157,6 +164,7 @@ export class AppComponent implements OnInit {
     this.audio.lowPassQ = this.lowPassQ;
     this.audio.highPassQ = this.highPassQ;
     this.audio.updateHighPassFilter();
+    this.storeSettings();
   }
 
   updateHighShelfFilter() {
@@ -164,6 +172,7 @@ export class AppComponent implements OnInit {
     this.audio.highShelfFreq = this.highShelfFreq;
     this.audio.highShelfGain = this.highShelfGain;
     this.audio.updateHighShelfFilter();
+    this.storeSettings();
   }
 
   updateGain() {
@@ -174,5 +183,55 @@ export class AppComponent implements OnInit {
     this.audio.subwooferGain = this.subwooferGain;
     this.audio.surroundGain = this.surroundGain;
     this.audio.updateGain();
+    this.storeSettings();
+  }
+
+  ngOnDestroy() {
+    this.storeSettings();
+  }
+
+
+  storeSettings() {
+    console.log('storing');
+    const digitalAudio = {
+      masterGain: this.masterGain,
+      frontGain: this.frontGain,
+      surroundGain: this.surroundGain,
+      centerGain: this.centerGain,
+      subwooferGain: this.subwooferGain,
+      frontDelay: this.frontDelay,
+      centerDelay: this.centerDelay,
+      surroundDelay: this.surroundDelay,
+      subWooferDelay: this.subWooferDelay,
+      lowPassFreq: this.lowPassFreq,
+      lowPassQ: this.lowPassQ,
+      highPassFreq: this.highPassFreq,
+      highPassQ: this.highPassQ,
+      highShelfFreq: this.highShelfFreq,
+      highShelfGain: this.highShelfGain
+    };
+    this.localStorage.setItem('digitalAudio', digitalAudio).subscribe();
+  }
+
+  getSettings() {
+    this.localStorage.getItem('digitalAudio').subscribe((digitalAudio: any) => {
+      if (digitalAudio) {
+        this.masterGain = digitalAudio.masterGain;
+        this.frontGain = digitalAudio.frontGain;
+        this.surroundGain = digitalAudio.surroundGain;
+        this.centerGain = digitalAudio.centerGain;
+        this.subwooferGain = digitalAudio.subwooferGain;
+        this.frontDelay = digitalAudio.frontDelay;
+        this.centerDelay = digitalAudio.centerDelay;
+        this.surroundDelay = digitalAudio.surroundDelay;
+        this.subWooferDelay = digitalAudio.subWooferDelay;
+        this.lowPassFreq = digitalAudio.lowPassFreq;
+        this.lowPassQ = digitalAudio.lowPassQ;
+        this.highPassFreq = digitalAudio.highPassFreq;
+        this.highPassQ = digitalAudio.highPassQ;
+        this.highShelfFreq = digitalAudio.highPassQ;
+        this.highShelfGain = digitalAudio.highPassQ;
+      }
+    });
   }
 }

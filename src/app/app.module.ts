@@ -17,6 +17,7 @@ import { MatSliderModule } from '@angular/material/slider';
 import { MatIconModule } from '@angular/material/icon';
 import { MatChipsModule } from '@angular/material/chips';
 
+import { StorageModule } from '@ngx-pwa/local-storage';
 
 @NgModule({
   declarations: [
@@ -34,7 +35,11 @@ import { MatChipsModule } from '@angular/material/chips';
     MatDividerModule,
     MatSliderModule,
     MatIconModule,
-    MatChipsModule
+    MatChipsModule,
+
+    StorageModule.forRoot({
+      IDBNoWrap: true,
+    })
   ],
   providers: [],
   bootstrap: [AppComponent]
