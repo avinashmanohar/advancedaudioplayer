@@ -27,6 +27,9 @@ export class AudioService {
   private gainSL: GainNode;
   private gainSR: GainNode;
 
+  private gainLowPassSW: GainNode;
+  private gainLowPassResonanceSW: GainNode;
+
   private delayL: DelayNode;
   private delayR: DelayNode;
   private delayC: DelayNode;
@@ -40,6 +43,7 @@ export class AudioService {
   private filterHighPassSL: BiquadFilterNode;
   private filterHighPassSR: BiquadFilterNode;
   private filterLowPassSW: BiquadFilterNode;
+  private filterLowPassSWResonance: BiquadFilterNode;
 
   private filterHighShelfL: BiquadFilterNode;
   private filterHighShelfR: BiquadFilterNode;
@@ -60,6 +64,9 @@ export class AudioService {
   public centerGain = 100;
   public subwooferGain = 100;
 
+  public subwooferLowPassGain = 50;
+  public subwooferLowPassResonanceGain = 50;
+
   // Delay variables
   public frontDelay = 0 / 1000;
   public surroundDelay = 50 / 1000;
@@ -68,11 +75,14 @@ export class AudioService {
 
   // Filger variables
   public highPassFreq = 300;
-  public highPassQ = 0;
+  public highPassQ = 1;
   public lowPassFreq = 60;
-  public lowPassQ = 0;
+  public lowPassQ = 1;
   public highShelfFreq = 12000;
   public highShelfGain = 10;
+
+  public lowPassResonanceFreq = 40;
+  public lowPassResonanceQ = 1;
 
   playSound(url: string, position: number) {
     this.http.get(url, {
@@ -145,6 +155,9 @@ export class AudioService {
     this.gainSL = this.context.createGain();
     this.gainSR = this.context.createGain();
 
+    this.gainLowPassSW = this.context.createGain();
+    this.gainLowPassResonanceSW = this.context.createGain();
+
     this.delayL = this.context.createDelay();
     this.delayR = this.context.createDelay();
     this.delayC = this.context.createDelay();
@@ -165,6 +178,7 @@ export class AudioService {
     this.filterHighShelfSR = this.context.createBiquadFilter();
 
     this.filterLowPassSW = this.context.createBiquadFilter();
+    this.filterLowPassSWResonance = this.context.createBiquadFilter();
     // Required stuff start ends
 
     // start connecting
@@ -223,7 +237,13 @@ export class AudioService {
     this.updateDelay();
 
 
-    this.delaySW.connect(this.filterLowPassSW);
+    this.delaySW.connect(this.gainLowPassSW);
+    this.delaySW.connect(this.gainLowPassResonanceSW);
+
+    this.gainLowPassSW.connect(this.filterLowPassSW);
+    this.gainLowPassResonanceSW.connect(this.filterLowPassSWResonance);
+
+
 
     this.delayL.connect(this.filterHighShelfL);
     this.delayR.connect(this.filterHighShelfR);
@@ -249,6 +269,7 @@ export class AudioService {
     this.filterHighPassR.connect(merger, 0, 1); // Right
     this.filterHighPassC.connect(merger, 0, 2); // Center
     this.filterLowPassSW.connect(merger, 0, 3); // Sub Woofer
+    this.filterLowPassSWResonance.connect(merger, 0, 3); // Sub Woofer
     this.filterHighPassSL.connect(merger, 0, 4); // Surround Left
     this.filterHighPassSR.connect(merger, 0, 5); // Surround Right
 
@@ -326,6 +347,13 @@ export class AudioService {
     this.filterLowPassSW.type = 'lowpass'; // For subwoofer
     this.filterLowPassSW.frequency.value = this.lowPassFreq;
     this.filterLowPassSW.Q.value = this.lowPassQ;
+    this.gainLowPassSW.gain.value = this.subwooferLowPassGain / 100;
+
+
+    this.filterLowPassSWResonance.type = 'lowpass'; // For subwoofer
+    this.filterLowPassSWResonance.frequency.value = this.lowPassResonanceFreq;
+    this.filterLowPassSWResonance.Q.value = this.lowPassResonanceQ;
+    this.gainLowPassResonanceSW.gain.value = this.subwooferLowPassResonanceGain / 100;
 
     this.filterHighPassL.type = 'highpass';
     this.filterHighPassL.frequency.value = this.highPassFreq; // Hz;
@@ -371,7 +399,7 @@ export class AudioService {
   updateGain() {
     this.allGain.gain.value = this.masterGain / 100;
     this.gainL.gain.value = this.frontGain / 100;
-    this.gainR.gain.value = this.frontGain / 100
+    this.gainR.gain.value = this.frontGain / 100;
     this.gainC.gain.value = this.centerGain / 100;
     this.gainSW.gain.value = this.subwooferGain / 100;
     this.gainSL.gain.value = this.surroundGain / 100;
