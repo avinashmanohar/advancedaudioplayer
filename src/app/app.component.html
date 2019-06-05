@@ -208,7 +208,7 @@
           <div class="col">
             <table style="margin:20px 10px;">
               <tr>
-                <th colspan="3">
+                <th colspan="2">
                   <mat-card-subtitle>Frequency pass filters in Hz</mat-card-subtitle>
                 </th>
               </tr>
@@ -225,12 +225,6 @@
                       [(ngModel)]="lowPassFreq" [ngModelOptions]="{standalone: true}">
                   </mat-form-field>
                 </td>
-                <td>
-                  <mat-form-field style="width: 130px;margin: 5px;">
-                    <input matInput #message maxlength="256" placeholder="Lowpass Resonance Freq. [ .1 Ch ]"
-                      type="number" [(ngModel)]="lowPassResonanceFreq" [ngModelOptions]="{standalone: true}">
-                  </mat-form-field>
-                </td>
               </tr>
               <tr>
                 <td>
@@ -245,30 +239,9 @@
                       [(ngModel)]="lowPassQ" [ngModelOptions]="{standalone: true}">
                   </mat-form-field>
                 </td>
-                <td>
-                  <mat-form-field style="width: 130px;margin: 5px;">
-                    <input matInput #message maxlength="256" placeholder="Lowpass Resonance Q [ .1 Ch ]" type="number"
-                      [(ngModel)]="lowPassResonanceQ" [ngModelOptions]="{standalone: true}">
-                  </mat-form-field>
-                </td>
               </tr>
               <tr>
-                <td>&nbsp;</td>
-                <td>
-                  <mat-form-field style="width: 130px;margin: 5px;">
-                    <input matInput #message maxlength="256" placeholder="Lowpass Gain" type="number"
-                      [(ngModel)]="subwooferLowPassGain" [ngModelOptions]="{standalone: true}">
-                  </mat-form-field>
-                </td>
-                <td>
-                  <mat-form-field style="width: 130px;margin: 5px;">
-                    <input matInput #message maxlength="256" placeholder="Resonance Gain" type="number"
-                      [(ngModel)]="subwooferLowPassResonanceGain" [ngModelOptions]="{standalone: true}">
-                  </mat-form-field>
-                </td>
-              </tr>
-              <tr>
-                <td colspan="3">
+                <td colspan="2">
                   <button (click)="updateHighPassFilter()" mat-raised-button style="margin-right: 10px;">
                     Update freq. pass filter
                   </button>

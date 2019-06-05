@@ -35,9 +35,6 @@ export class AppComponent implements OnInit {
   centerGain = 100;
   subwooferGain = 100;
 
-  subwooferLowPassGain = 50;
-  subwooferLowPassResonanceGain = 50;
-
   // Delay variables
   frontDelay = 0;
   centerDelay = 0;
@@ -47,9 +44,6 @@ export class AppComponent implements OnInit {
   // Filters variables
   lowPassFreq = 60;
   lowPassQ = 1;
-  lowPassResonanceFreq = 40;
-  lowPassResonanceQ = 1;
-
   highPassFreq = 300; // Hz
   highPassQ = 1;
 
@@ -162,12 +156,6 @@ export class AppComponent implements OnInit {
     this.audio.highPassFreq = this.highPassFreq;
     this.audio.lowPassQ = this.lowPassQ;
     this.audio.highPassQ = this.highPassQ;
-
-    // New 
-    this.audio.lowPassResonanceFreq = this.lowPassResonanceFreq;
-    this.audio.lowPassResonanceQ = this.lowPassResonanceQ;
-    this.audio.subwooferLowPassGain = this.subwooferLowPassGain;
-    this.audio.subwooferLowPassResonanceGain = this.subwooferLowPassResonanceGain;
     this.audio.updateHighPassFilter();
   }
 
