@@ -1,4 +1,4 @@
-import { Component, OnInit, ChangeDetectorRef, OnDestroy } from '@angular/core';
+import { Component, OnInit, ChangeDetectorRef } from '@angular/core';
 import { AudioService } from './shared/audio.service';
 import { interval, Subscription } from 'rxjs';
 import { MatSlideToggleChange } from '@angular/material/slide-toggle';
@@ -10,7 +10,7 @@ import { LocalStorage } from '@ngx-pwa/local-storage';
   templateUrl: './app.component.html',
   styleUrls: ['./app.component.scss']
 })
-export class AppComponent implements OnInit, OnDestroy {
+export class AppComponent implements OnInit {
 
   constructor(
     private audio: AudioService,
@@ -186,9 +186,6 @@ export class AppComponent implements OnInit, OnDestroy {
     this.storeSettings();
   }
 
-  ngOnDestroy() {
-    this.storeSettings();
-  }
 
 
   storeSettings() {
@@ -229,8 +226,8 @@ export class AppComponent implements OnInit, OnDestroy {
         this.lowPassQ = digitalAudio.lowPassQ;
         this.highPassFreq = digitalAudio.highPassFreq;
         this.highPassQ = digitalAudio.highPassQ;
-        this.highShelfFreq = digitalAudio.highPassQ;
-        this.highShelfGain = digitalAudio.highPassQ;
+        this.highShelfFreq = digitalAudio.highShelfFreq;
+        this.highShelfGain = digitalAudio.highShelfGain;
       }
     });
   }
