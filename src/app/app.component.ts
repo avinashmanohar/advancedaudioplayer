@@ -189,7 +189,6 @@ export class AppComponent implements OnInit {
 
 
   storeSettings() {
-    console.log('storing');
     const digitalAudio = {
       masterGain: this.masterGain,
       frontGain: this.frontGain,
@@ -207,7 +206,9 @@ export class AppComponent implements OnInit {
       highShelfFreq: this.highShelfFreq,
       highShelfGain: this.highShelfGain
     };
-    this.localStorage.setItem('digitalAudio', digitalAudio).subscribe();
+    try {
+      this.localStorage.setItem('digitalAudio', digitalAudio).subscribe();
+    } catch (e) { }
   }
 
   getSettings() {
