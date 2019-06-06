@@ -148,34 +148,35 @@ export class AppComponent implements OnInit {
   }
 
   updateDelay() {
+    this.storeSettings();
     console.log('Update delay');
     this.audio.frontDelay = this.frontDelay / 1000;
     this.audio.centerDelay = this.centerDelay / 1000;
     this.audio.subWooferDelay = this.subWooferDelay / 1000;
     this.audio.surroundDelay = this.surroundDelay / 1000;
     this.audio.updateDelay();
-    this.storeSettings();
   }
 
   updateHighPassFilter() {
+    this.storeSettings();
     console.log('Update highpass filter');
     this.audio.lowPassFreq = this.lowPassFreq;
     this.audio.highPassFreq = this.highPassFreq;
     this.audio.lowPassQ = this.lowPassQ;
     this.audio.highPassQ = this.highPassQ;
     this.audio.updateHighPassFilter();
-    this.storeSettings();
   }
 
   updateHighShelfFilter() {
+    this.storeSettings();
     console.log('Update highshelf filter');
     this.audio.highShelfFreq = this.highShelfFreq;
     this.audio.highShelfGain = this.highShelfGain;
     this.audio.updateHighShelfFilter();
-    this.storeSettings();
   }
 
   updateGain() {
+    this.storeSettings();
     console.log('Update volume');
     this.audio.masterGain = this.masterGain;
     this.audio.frontGain = this.frontGain;
@@ -183,7 +184,6 @@ export class AppComponent implements OnInit {
     this.audio.subwooferGain = this.subwooferGain;
     this.audio.surroundGain = this.surroundGain;
     this.audio.updateGain();
-    this.storeSettings();
   }
 
 
@@ -206,9 +206,7 @@ export class AppComponent implements OnInit {
       highShelfFreq: this.highShelfFreq,
       highShelfGain: this.highShelfGain
     };
-    try {
-      this.localStorage.setItem('digitalAudio', digitalAudio).subscribe();
-    } catch (e) { }
+    this.localStorage.setItem('digitalAudio', digitalAudio).subscribe();
   }
 
   getSettings() {
