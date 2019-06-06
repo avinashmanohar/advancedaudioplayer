@@ -227,6 +227,26 @@ export class AppComponent implements OnInit {
         this.highPassQ = digitalAudio.highPassQ;
         this.highShelfFreq = digitalAudio.highShelfFreq;
         this.highShelfGain = digitalAudio.highShelfGain;
+
+        // Update audio service variables
+        this.audio.frontDelay = this.frontDelay / 1000;
+        this.audio.centerDelay = this.centerDelay / 1000;
+        this.audio.subWooferDelay = this.subWooferDelay / 1000;
+        this.audio.surroundDelay = this.surroundDelay / 1000;
+
+        this.audio.lowPassFreq = this.lowPassFreq;
+        this.audio.highPassFreq = this.highPassFreq;
+        this.audio.lowPassQ = this.lowPassQ;
+        this.audio.highPassQ = this.highPassQ;
+
+        this.audio.highShelfFreq = this.highShelfFreq;
+        this.audio.highShelfGain = this.highShelfGain;
+
+        this.audio.masterGain = this.masterGain;
+        this.audio.frontGain = this.frontGain;
+        this.audio.centerGain = this.centerGain;
+        this.audio.subwooferGain = this.subwooferGain;
+        this.audio.surroundGain = this.surroundGain;
       }
     });
   }
