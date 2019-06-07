@@ -7,12 +7,15 @@ import { HelperService } from './helper.service';
 @Injectable({
   providedIn: 'root'
 })
+
 export class AudioService {
 
   constructor(private http: HttpClient, private helper: HelperService) {
     this.audioworkletRunning = new Subject<boolean>();
     this.songDuration = new Subject<number>();
     this.channelCount = new Subject<number>();
+    this.lMatrixL = 1;
+    this.lMatrixR = 0;
   }
   public context: AudioContext;
 
@@ -68,11 +71,28 @@ export class AudioService {
 
   // Filger variables
   public highPassFreq = 300;
-  public highPassQ = 1;
+  public highPassQ = 0;
   public lowPassFreq = 60;
   public lowPassQ = 1;
   public highShelfFreq = 12000;
   public highShelfGain = 10;
+
+  // Matrix variables // inputMatrixOutput
+  public lMatrixL = 1;
+  public lMatrixR = 0;
+  public rMatrixL = 0;
+  public rMatrixR = 1;
+
+  public lMatrixC = 0.5;
+  public rMatrixC = 0.5;
+
+  public lMatrixSW = 0.5;
+  public rMatrixSW = 0.5;
+
+  public lMatrixSL = 1;
+  public lMatrixSR = -1;
+  public rMatrixSL = -1;
+  public rMatrixSR = 1;
 
   playSound(url: string, position: number) {
     this.http.get(url, {
@@ -193,7 +213,50 @@ export class AudioService {
       // create the processor
       this.processor = this.context.createScriptProcessor(0 /*bufferSize*/, 2 /*num inputs*/, 6 /*num outputs*/);
       this.source.connect(this.processor);
-      this.processor.onaudioprocess = this.matrixProcessing;
+      // this.processor.onaudioprocess = this.matrixProcessing; // Because this.matrix variables were not accessable
+      this.processor.onaudioprocess = evt => {
+        const inputL = evt.inputBuffer.getChannelData(0);
+        const inputR = evt.inputBuffer.getChannelData(1);
+
+        const outputL = evt.outputBuffer.getChannelData(0);
+        const outputR = evt.outputBuffer.getChannelData(1);
+        const outputC = evt.outputBuffer.getChannelData(2);
+        const outputSW = evt.outputBuffer.getChannelData(3);
+
+        const outputSL = evt.outputBuffer.getChannelData(4);
+        const outputSR = evt.outputBuffer.getChannelData(5);
+        const len = inputL.length;
+        console.log(this.lMatrixL);
+        for (let i = 0; i < len; i++) {
+          outputL[i] = inputL[i] * this.lMatrixL + inputR[i] * this.rMatrixL;
+          outputR[i] = inputL[i] * this.lMatrixR + inputR[i] * this.rMatrixR;
+          outputC[i] = inputL[i] * this.lMatrixC + inputR[i] * this.rMatrixC;
+          outputSW[i] = inputL[i] * this.lMatrixSW + inputR[i] * this.rMatrixSW;
+          outputSL[i] = inputL[i] * this.lMatrixSL + inputR[i] * this.rMatrixSL; // 1 + -1 = 1 - 1
+          outputSR[i] = inputL[i] * this.lMatrixSR + inputR[i] * this.rMatrixSR;
+
+          /*
+          outputL[i] = inputL[i];
+          outputR[i] = inputR[i];
+          outputC[i] = inputL[i] * 0.5 + inputR[i] * 0.5;
+          outputSW[i] = inputL[i] * 0.5 + inputR[i] * 0.5;
+          outputSL[i] = inputL[i] - inputR[i];
+          outputSR[i] = inputR[i] - inputL[i];
+          */
+
+
+          // Below is Dolby Pro Logic II
+          /*
+          outputL[i] = inputL[i];
+          outputR[i] = inputR[i];
+          outputC[i] = inputL[i] * 0.5 + inputR[i] * 0.5;
+          outputSW[i] = inputL[i] + inputR[i];
+          outputSL[i] = Math.sqrt(inputL[i] * (3 / 2)) - (inputR[i] * 0.5);
+          outputSR[i] = Math.sqrt(inputR[i] * (3 / 2)) - (inputL[i] * 0.5);
+          */
+
+        }
+      };
       // Because onaudioprocess is depricating, Audioworklet is implemented, this will fallback if above is failed.
     }
     this.processor.connect(this.allGain);
@@ -259,6 +322,7 @@ export class AudioService {
   }
 
 
+
   matrixProcessing(evt: AudioProcessingEvent) {
     const inputL = evt.inputBuffer.getChannelData(0);
     const inputR = evt.inputBuffer.getChannelData(1);
@@ -272,18 +336,23 @@ export class AudioService {
     const outputSR = evt.outputBuffer.getChannelData(5);
     const len = inputL.length;
 
-
-    console.log(evt.outputBuffer.numberOfChannels);
     for (let i = 0; i < len; i++) {
+      outputL[i] = inputL[i] * this.lMatrixL + inputR[i] * this.rMatrixL;
+      outputR[i] = inputL[i] * this.lMatrixR + inputR[i] * this.rMatrixR;
+      outputC[i] = inputL[i] * this.lMatrixC + inputR[i] * this.rMatrixC;
+      outputSW[i] = inputL[i] * this.lMatrixSW + inputR[i] * this.rMatrixSW;
+      outputSL[i] = inputL[i] * this.lMatrixSL + inputR[i] * this.rMatrixSL; // 1 + -1 = 1 - 1
+      outputSR[i] = inputL[i] * this.lMatrixSR + inputR[i] * this.rMatrixSR;
 
+
+      /*
       outputL[i] = inputL[i];
       outputR[i] = inputR[i];
       outputC[i] = inputL[i] * 0.5 + inputR[i] * 0.5;
-      outputSW[i] = inputL[i] + inputR[i];
-      outputSL[i] = inputR[i] - inputL[i];
-      outputSR[i] = inputL[i] - inputR[i];
-
-
+      outputSW[i] = inputL[i] * 0.5 + inputR[i] * 0.5;
+      outputSL[i] = inputL[i] - inputR[i];
+      outputSR[i] = inputR[i] - inputL[i];
+      */
 
       // Below is Dolby Pro Logic II
       /*
@@ -371,7 +440,7 @@ export class AudioService {
   updateGain() {
     this.allGain.gain.value = this.masterGain / 100;
     this.gainL.gain.value = this.frontGain / 100;
-    this.gainR.gain.value = this.frontGain / 100
+    this.gainR.gain.value = this.frontGain / 100;
     this.gainC.gain.value = this.centerGain / 100;
     this.gainSW.gain.value = this.subwooferGain / 100;
     this.gainSL.gain.value = this.surroundGain / 100;

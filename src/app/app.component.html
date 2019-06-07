@@ -83,9 +83,13 @@
   <div class="row" style="margin-top: 10px;">
     <div class="col-12">
       <mat-card>
-        <mat-card-header>
-          <mat-card-title>Sound tweaker</mat-card-title>
+        <mat-card-header style=" width: 100%;">
+          <mat-card-title>Sound tweaker
+          </mat-card-title>
           <mat-card-subtitle>Audio controller</mat-card-subtitle>
+          <span style="float: right;"><button (click)="resetSettings()" mat-raised-button style="margin-right: 10px;">
+              Reset settings
+            </button></span>
         </mat-card-header>
         <mat-divider></mat-divider>
         <div class="row">
@@ -246,6 +250,61 @@
                     Update freq. pass filter
                   </button>
                 </td>
+              </tr>
+            </table>
+          </div>
+        </div>
+        <div class="row">
+          <div class="col">
+            <table style="margin:20px 10px;">
+              <tr>
+                <th colspan="4">
+                  <mat-card-subtitle>Upmix matrix</mat-card-subtitle>
+                </th>
+              </tr>
+              <tr>
+                <th colspan="8">OUTPUT</th>
+              </tr>
+              <tr>
+                <th colspan="2"></th>
+                <th>L</th>
+                <th>R</th>
+                <th>C</th>
+                <th>SW</th>
+                <th>SL</th>
+                <th>SR</th>
+              </tr>
+              <tr>
+                <th rowspan="3">
+                  INPUT
+                </th>
+              </tr>
+              <tr>
+                <th>
+                  L
+                </th>
+                <td><input type="number" style="width: 50px;" [(ngModel)]="lMatrixL" /></td>
+                <td><input type="number" style="width: 50px;" [(ngModel)]="lMatrixR" /></td>
+                <td><input type="number" style="width: 50px;" [(ngModel)]="lMatrixC" /></td>
+                <td><input type="number" style="width: 50px;" [(ngModel)]="lMatrixSW" /></td>
+                <td><input type="number" style="width: 50px;" [(ngModel)]="lMatrixSL" /></td>
+                <td><input type="number" style="width: 50px;" [(ngModel)]="lMatrixSR" /></td>
+              </tr>
+              <tr>
+                <th>
+                  R
+                </th>
+                <td><input type="number" style="width: 50px;" [(ngModel)]="rMatrixL" /></td>
+                <td><input type="number" style="width: 50px;" [(ngModel)]="rMatrixR" /></td>
+                <td><input type="number" style="width: 50px;" [(ngModel)]="rMatrixC" /></td>
+                <td><input type="number" style="width: 50px;" [(ngModel)]="rMatrixSW" /></td>
+                <td><input type="number" style="width: 50px;" [(ngModel)]="rMatrixSL" /></td>
+                <td><input type="number" style="width: 50px;" [(ngModel)]="rMatrixSR" /></td>
+              </tr>
+              <tr>
+                <td colspan="4"> <button (click)="updateMatrix()" mat-raised-button style="margin-right: 10px;">
+                    Update Matrix
+                  </button></td>
               </tr>
             </table>
           </div>

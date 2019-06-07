@@ -50,10 +50,27 @@ export class AppComponent implements OnInit {
   lowPassFreq = 60;
   lowPassQ = 1;
   highPassFreq = 300; // Hz
-  highPassQ = 1;
+  highPassQ = 0;
 
   highShelfFreq = 12000; // Hz
   highShelfGain = 10; // Hz
+
+  // Matrix variables // inputMatrixOutput
+  lMatrixL = 1;
+  lMatrixR = 0;
+  rMatrixL = 0;
+  rMatrixR = 1;
+
+  lMatrixC = 0.5;
+  rMatrixC = 0.5;
+
+  lMatrixSW = 0.5;
+  rMatrixSW = 0.5;
+
+  lMatrixSL = 1;
+  lMatrixSR = -1;
+  rMatrixSL = -1;
+  rMatrixSR = 1;
 
   ngOnInit() {
     this.getSettings(); // Get values from localStorage
@@ -204,7 +221,21 @@ export class AppComponent implements OnInit {
       highPassFreq: this.highPassFreq,
       highPassQ: this.highPassQ,
       highShelfFreq: this.highShelfFreq,
-      highShelfGain: this.highShelfGain
+      highShelfGain: this.highShelfGain,
+
+      lMatrixL: this.lMatrixL,
+      lMatrixR: this.lMatrixR,
+      lMatrixC: this.lMatrixC,
+      lMatrixSW: this.lMatrixSW,
+      lMatrixSL: this.lMatrixSL,
+      lMatrixSR: this.lMatrixSR,
+
+      rMatrixL: this.rMatrixL,
+      rMatrixR: this.rMatrixR,
+      rMatrixC: this.rMatrixC,
+      rMatrixSW: this.rMatrixSW,
+      rMatrixSL: this.rMatrixSL,
+      rMatrixSR: this.rMatrixSR
     };
     this.localStorage.setItem('digitalAudio', digitalAudio).subscribe();
   }
@@ -228,6 +259,20 @@ export class AppComponent implements OnInit {
         this.highShelfFreq = digitalAudio.highShelfFreq;
         this.highShelfGain = digitalAudio.highShelfGain;
 
+        this.lMatrixL = digitalAudio.lMatrixL;
+        this.lMatrixR = digitalAudio.lMatrixR;
+        this.lMatrixC = digitalAudio.lMatrixC;
+        this.lMatrixSW = digitalAudio.lMatrixSW;
+        this.lMatrixSL = digitalAudio.lMatrixSL;
+        this.lMatrixSR = digitalAudio.lMatrixSR;
+
+        this.rMatrixL = digitalAudio.rMatrixL;
+        this.rMatrixR = digitalAudio.rMatrixR;
+        this.rMatrixC = digitalAudio.rMatrixC;
+        this.rMatrixSW = digitalAudio.rMatrixSW;
+        this.rMatrixSL = digitalAudio.rMatrixSL;
+        this.rMatrixSR = digitalAudio.rMatrixSR;
+
         // Update audio service variables
         this.audio.frontDelay = this.frontDelay / 1000;
         this.audio.centerDelay = this.centerDelay / 1000;
@@ -247,7 +292,44 @@ export class AppComponent implements OnInit {
         this.audio.centerGain = this.centerGain;
         this.audio.subwooferGain = this.subwooferGain;
         this.audio.surroundGain = this.surroundGain;
+
+        this.audio.lMatrixL = this.lMatrixL;
+        this.audio.lMatrixR = this.lMatrixR;
+        this.audio.lMatrixC = this.lMatrixC;
+        this.audio.lMatrixSW = this.lMatrixSW;
+        this.audio.lMatrixSL = this.lMatrixSL;
+        this.audio.lMatrixSR = this.lMatrixSR;
+
+        this.audio.rMatrixL = this.rMatrixL;
+        this.audio.rMatrixR = this.rMatrixR;
+        this.audio.rMatrixC = this.rMatrixC;
+        this.audio.rMatrixSW = this.rMatrixSW;
+        this.audio.rMatrixSL = this.rMatrixSL;
+        this.audio.rMatrixSR = this.rMatrixSR;
       }
     });
+  }
+
+  updateMatrix() {
+    this.storeSettings();
+    console.log('Update matrix');
+    this.audio.lMatrixL = this.lMatrixL;
+    this.audio.lMatrixR = this.lMatrixR;
+    this.audio.lMatrixC = this.lMatrixC;
+    this.audio.lMatrixSW = this.lMatrixSW;
+    this.audio.lMatrixSL = this.lMatrixSL;
+    this.audio.lMatrixSR = this.lMatrixSR;
+
+    this.audio.rMatrixL = this.rMatrixL;
+    this.audio.rMatrixR = this.rMatrixR;
+    this.audio.rMatrixC = this.rMatrixC;
+    this.audio.rMatrixSW = this.rMatrixSW;
+    this.audio.rMatrixSL = this.rMatrixSL;
+    this.audio.rMatrixSR = this.rMatrixSR;
+  }
+
+  resetSettings() {
+    this.localStorage.clear().subscribe();
+    window.location.reload();
   }
 }
