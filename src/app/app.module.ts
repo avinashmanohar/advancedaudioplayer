@@ -18,6 +18,8 @@ import { MatIconModule } from '@angular/material/icon';
 import { MatChipsModule } from '@angular/material/chips';
 
 import { StorageModule } from '@ngx-pwa/local-storage';
+import { ServiceWorkerModule } from '@angular/service-worker';
+import { environment } from '../environments/environment';
 
 @NgModule({
   declarations: [
@@ -39,7 +41,9 @@ import { StorageModule } from '@ngx-pwa/local-storage';
 
     StorageModule.forRoot({
       IDBNoWrap: true,
-    })
+    }),
+
+    ServiceWorkerModule.register('ngsw-worker.js', { enabled: environment.production })
   ],
   providers: [],
   bootstrap: [AppComponent]
