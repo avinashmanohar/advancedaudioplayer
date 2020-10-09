@@ -229,6 +229,25 @@
                       [(ngModel)]="lowPassFreq" [ngModelOptions]="{standalone: true}">
                   </mat-form-field>
                 </td>
+                <td>
+                  <mat-form-field>
+                    <mat-label>Slope</mat-label>
+                    <mat-select [(ngModel)]="lpfSlopeLevel" [ngModelOptions]="{standalone: true}">
+                      <mat-option value="0">
+                        12dB/octave
+                      </mat-option>
+                      <mat-option value="1">
+                        24dB/octave
+                      </mat-option>
+                      <mat-option value="2">
+                        36dB/octave
+                      </mat-option>
+                      <mat-option value="3">
+                        48dB/octave
+                      </mat-option>
+                    </mat-select>
+                  </mat-form-field>
+                </td>
               </tr>
               <tr>
                 <td>
@@ -243,6 +262,7 @@
                       [(ngModel)]="lowPassQ" [ngModelOptions]="{standalone: true}">
                   </mat-form-field>
                 </td>
+                <td></td>
               </tr>
               <tr>
                 <td colspan="2">

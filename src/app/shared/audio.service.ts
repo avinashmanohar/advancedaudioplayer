@@ -42,7 +42,10 @@ export class AudioService {
   private filterHighPassC: BiquadFilterNode;
   private filterHighPassSL: BiquadFilterNode;
   private filterHighPassSR: BiquadFilterNode;
-  private filterLowPassSW: BiquadFilterNode;
+  private filterLowPassSW0: BiquadFilterNode;
+  private filterLowPassSW1: BiquadFilterNode;
+  private filterLowPassSW2: BiquadFilterNode;
+  private filterLowPassSW3: BiquadFilterNode;
 
   private filterHighShelfL: BiquadFilterNode;
   private filterHighShelfR: BiquadFilterNode;
@@ -69,13 +72,14 @@ export class AudioService {
   public subWooferDelay = 0 / 1000;
   public centerDelay = 0 / 1000;
 
-  // Filger variables
+  // Filter variables
   public highPassFreq = 300;
   public highPassQ = 0;
   public lowPassFreq = 60;
   public lowPassQ = 1;
   public highShelfFreq = 12000;
   public highShelfGain = 10;
+  public lpfSlopeLevel = 0;
 
   // Matrix variables // inputMatrixOutput
   public lMatrixL = 1;
@@ -184,7 +188,10 @@ export class AudioService {
     this.filterHighShelfSL = this.context.createBiquadFilter();
     this.filterHighShelfSR = this.context.createBiquadFilter();
 
-    this.filterLowPassSW = this.context.createBiquadFilter();
+    this.filterLowPassSW0 = this.context.createBiquadFilter();
+    this.filterLowPassSW1 = this.context.createBiquadFilter();
+    this.filterLowPassSW2 = this.context.createBiquadFilter();
+    this.filterLowPassSW3 = this.context.createBiquadFilter();
     // Required stuff start ends
 
     // start connecting
@@ -286,7 +293,10 @@ export class AudioService {
     this.updateDelay();
 
 
-    this.delaySW.connect(this.filterLowPassSW);
+    this.delaySW.connect(this.filterLowPassSW0);
+    this.filterLowPassSW0.connect(this.filterLowPassSW1); // Additional slope
+    this.filterLowPassSW1.connect(this.filterLowPassSW2); // Additional slope
+    this.filterLowPassSW2.connect(this.filterLowPassSW3); // Additional slope
 
     this.delayL.connect(this.filterHighShelfL);
     this.delayR.connect(this.filterHighShelfR);
@@ -307,11 +317,19 @@ export class AudioService {
     // Filters
     this.updateHighPassFilter();
     // Filters ends
-
+    /*
+        this.filterHighPassL.connect(merger, 0, 0); // Left
+        this.filterHighPassR.connect(merger, 0, 1); // Right
+        this.filterHighPassC.connect(merger, 0, 2); // Center
+        this.filterLowPassSW.connect(merger, 0, 3); // Sub Woofer
+        this.filterHighPassSL.connect(merger, 0, 4); // Surround Left
+        this.filterHighPassSR.connect(merger, 0, 5); // Surround Right
+     */
     this.filterHighPassL.connect(merger, 0, 0); // Left
     this.filterHighPassR.connect(merger, 0, 1); // Right
     this.filterHighPassC.connect(merger, 0, 2); // Center
-    this.filterLowPassSW.connect(merger, 0, 3); // Sub Woofer
+    this['filterLowPassSW' + this.lpfSlopeLevel].connect(merger, 0, 0); // Sub Woofer
+    this['filterLowPassSW' + this.lpfSlopeLevel].connect(merger, 0, 1); // Sub Woofer
     this.filterHighPassSL.connect(merger, 0, 4); // Surround Left
     this.filterHighPassSR.connect(merger, 0, 5); // Surround Right
 
@@ -392,9 +410,18 @@ export class AudioService {
 
   updateHighPassFilter() {
     // Set some delay to surround channels
-    this.filterLowPassSW.type = 'lowpass'; // For subwoofer
-    this.filterLowPassSW.frequency.value = this.lowPassFreq;
-    this.filterLowPassSW.Q.value = this.lowPassQ;
+    this.filterLowPassSW0.type = 'lowpass'; // For subwoofer
+    this.filterLowPassSW0.frequency.value = this.lowPassFreq; // 12dB/octave slope
+    this.filterLowPassSW0.Q.value = this.lowPassQ;
+    this.filterLowPassSW1.type = 'lowpass'; // For subwoofer
+    this.filterLowPassSW1.frequency.value = this.lowPassFreq; // 24dB/octave slope
+    // this.filterLowPassSW2.Q.value = this.lowPassQ;
+    this.filterLowPassSW2.type = 'lowpass'; // For subwoofer
+    this.filterLowPassSW2.frequency.value = this.lowPassFreq; // 36dB/octave slope
+    // this.filterLowPassSW3.Q.value = this.lowPassQ;
+    this.filterLowPassSW3.type = 'lowpass'; // For subwoofer
+    this.filterLowPassSW3.frequency.value = this.lowPassFreq;
+    // this.filterLowPassSW4.Q.value = this.lowPassQ;
 
     this.filterHighPassL.type = 'highpass';
     this.filterHighPassL.frequency.value = this.highPassFreq; // Hz;

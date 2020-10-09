@@ -16,6 +16,7 @@ import { MatDividerModule } from '@angular/material/divider';
 import { MatSliderModule } from '@angular/material/slider';
 import { MatIconModule } from '@angular/material/icon';
 import { MatChipsModule } from '@angular/material/chips';
+import { MatSelectModule } from '@angular/material/select';
 
 import { StorageModule } from '@ngx-pwa/local-storage';
 import { ServiceWorkerModule } from '@angular/service-worker';
@@ -38,7 +39,7 @@ import { environment } from '../environments/environment';
     MatSliderModule,
     MatIconModule,
     MatChipsModule,
-
+    MatSelectModule,
     StorageModule.forRoot({
       IDBNoWrap: true,
     }),

@@ -1,4 +1,4 @@
-import { Component, OnInit, ChangeDetectorRef } from '@angular/core';
+import { Component, OnInit, ChangeDetectorRef, OnDestroy } from '@angular/core';
 import { AudioService } from './shared/audio.service';
 import { interval, Subscription } from 'rxjs';
 import { MatSlideToggleChange } from '@angular/material/slide-toggle';
@@ -10,13 +10,16 @@ import { LocalStorage } from '@ngx-pwa/local-storage';
   templateUrl: './app.component.html',
   styleUrls: ['./app.component.scss']
 })
-export class AppComponent implements OnInit {
+export class AppComponent implements OnInit, OnDestroy {
 
   constructor(
     private audio: AudioService,
     private ref: ChangeDetectorRef,
     private helper: HelperService,
     private localStorage: LocalStorage) { }
+
+  private subscriptions: Subscription = new Subscription();
+
   title = 'advancedaudioplayer';
   audioworkletRunning = 'NA';
   channelCount = 0;
@@ -49,6 +52,8 @@ export class AppComponent implements OnInit {
   // Filters variables
   lowPassFreq = 60;
   lowPassQ = 1;
+  lpfSlopeLevel = 0;
+
   highPassFreq = 300; // Hz
   highPassQ = 0;
 
@@ -74,29 +79,35 @@ export class AppComponent implements OnInit {
 
   ngOnInit() {
     this.getSettings(); // Get values from localStorage
-    this.audio.audioworkletRunning.subscribe(d => {
-      if (d) {
-        this.audioworkletRunning = 'Yes';
-      } else {
-        this.audioworkletRunning = 'No';
-      }
-      this.ref.detectChanges();
-    });
-
-    this.audio.channelCount.subscribe(n => this.channelCount = n);
-
-    this.audio.songDuration
-      .subscribe(secs => {
-        // this.seekSubscription.closed = false;
-        if (!this.seekSubscription || this.seekSubscription.closed) {
-          this.startTimer();
+    this.subscriptions.add(
+      this.audio.audioworkletRunning.subscribe(d => {
+        if (d) {
+          this.audioworkletRunning = 'Yes';
+        } else {
+          this.audioworkletRunning = 'No';
         }
+        this.ref.detectChanges();
+      })
+    );
 
-        this.songDuration = this.helper.convertPlaybackTime(secs);
-        this.maxDurationInSec = secs;
+    this.subscriptions.add(
+      this.audio.channelCount.subscribe(n => this.channelCount = n)
+    );
+
+    this.subscriptions.add(
+      this.audio.songDuration
+        .subscribe(secs => {
+          // this.seekSubscription.closed = false;
+          if (!this.seekSubscription || this.seekSubscription.closed) {
+            this.startTimer();
+          }
+
+          this.songDuration = this.helper.convertPlaybackTime(secs);
+          this.maxDurationInSec = secs;
 
 
-      });
+        })
+    );
 
   }
 
@@ -124,6 +135,8 @@ export class AppComponent implements OnInit {
     }
     this.maxDurationInSec = 0;
     this.currentSeek = 0;
+
+    this.subscriptions.unsubscribe();
   }
 
   slideToggle(event: MatSlideToggleChange) {
@@ -137,19 +150,20 @@ export class AppComponent implements OnInit {
 
   startTimer() {
     const source = interval(125);
-    this.seekSubscription = source.subscribe(ts => {
-      if (this.currentSeek > this.maxDurationInSec) {
-        this.currentSeek = this.maxDurationInSec;
-        this.currentSeekMS = this.helper.convertPlaybackTime(this.currentSeek);
-        this.disconnect();
-      }
-      if (!this.sliderMouseDown) {
-        this.currentSeek += 0.125;
-        this.currentSeekMS = this.helper.convertPlaybackTime(this.currentSeek);
-      }
+    this.subscriptions.add(
+      this.seekSubscription = source.subscribe(ts => {
+        if (this.currentSeek > this.maxDurationInSec) {
+          this.currentSeek = this.maxDurationInSec;
+          this.currentSeekMS = this.helper.convertPlaybackTime(this.currentSeek);
+          this.disconnect();
+        }
+        if (!this.sliderMouseDown) {
+          this.currentSeek += 0.125;
+          this.currentSeekMS = this.helper.convertPlaybackTime(this.currentSeek);
+        }
 
-      this.ref.detectChanges();
-    });
+        this.ref.detectChanges();
+      }));
 
   }
 
@@ -177,6 +191,7 @@ export class AppComponent implements OnInit {
   updateHighPassFilter() {
     this.storeSettings();
     console.log('Update highpass filter');
+    this.audio.lpfSlopeLevel = this.lpfSlopeLevel;
     this.audio.lowPassFreq = this.lowPassFreq;
     this.audio.highPassFreq = this.highPassFreq;
     this.audio.lowPassQ = this.lowPassQ;
@@ -237,77 +252,81 @@ export class AppComponent implements OnInit {
       rMatrixSL: this.rMatrixSL,
       rMatrixSR: this.rMatrixSR
     };
-    this.localStorage.setItem('digitalAudio', digitalAudio).subscribe();
+    this.subscriptions.add(
+      this.localStorage.setItem('digitalAudio', digitalAudio).subscribe()
+    );
   }
 
   getSettings() {
-    this.localStorage.getItem('digitalAudio').subscribe((digitalAudio: any) => {
-      if (digitalAudio) {
-        this.masterGain = digitalAudio.masterGain;
-        this.frontGain = digitalAudio.frontGain;
-        this.surroundGain = digitalAudio.surroundGain;
-        this.centerGain = digitalAudio.centerGain;
-        this.subwooferGain = digitalAudio.subwooferGain;
-        this.frontDelay = digitalAudio.frontDelay;
-        this.centerDelay = digitalAudio.centerDelay;
-        this.surroundDelay = digitalAudio.surroundDelay;
-        this.subWooferDelay = digitalAudio.subWooferDelay;
-        this.lowPassFreq = digitalAudio.lowPassFreq;
-        this.lowPassQ = digitalAudio.lowPassQ;
-        this.highPassFreq = digitalAudio.highPassFreq;
-        this.highPassQ = digitalAudio.highPassQ;
-        this.highShelfFreq = digitalAudio.highShelfFreq;
-        this.highShelfGain = digitalAudio.highShelfGain;
+    this.subscriptions.add(
+      this.localStorage.getItem('digitalAudio').subscribe((digitalAudio: any) => {
+        if (digitalAudio) {
+          this.masterGain = digitalAudio.masterGain;
+          this.frontGain = digitalAudio.frontGain;
+          this.surroundGain = digitalAudio.surroundGain;
+          this.centerGain = digitalAudio.centerGain;
+          this.subwooferGain = digitalAudio.subwooferGain;
+          this.frontDelay = digitalAudio.frontDelay;
+          this.centerDelay = digitalAudio.centerDelay;
+          this.surroundDelay = digitalAudio.surroundDelay;
+          this.subWooferDelay = digitalAudio.subWooferDelay;
+          this.lowPassFreq = digitalAudio.lowPassFreq;
+          this.lowPassQ = digitalAudio.lowPassQ;
+          this.highPassFreq = digitalAudio.highPassFreq;
+          this.highPassQ = digitalAudio.highPassQ;
+          this.highShelfFreq = digitalAudio.highShelfFreq;
+          this.highShelfGain = digitalAudio.highShelfGain;
 
-        this.lMatrixL = digitalAudio.lMatrixL;
-        this.lMatrixR = digitalAudio.lMatrixR;
-        this.lMatrixC = digitalAudio.lMatrixC;
-        this.lMatrixSW = digitalAudio.lMatrixSW;
-        this.lMatrixSL = digitalAudio.lMatrixSL;
-        this.lMatrixSR = digitalAudio.lMatrixSR;
+          this.lMatrixL = digitalAudio.lMatrixL;
+          this.lMatrixR = digitalAudio.lMatrixR;
+          this.lMatrixC = digitalAudio.lMatrixC;
+          this.lMatrixSW = digitalAudio.lMatrixSW;
+          this.lMatrixSL = digitalAudio.lMatrixSL;
+          this.lMatrixSR = digitalAudio.lMatrixSR;
 
-        this.rMatrixL = digitalAudio.rMatrixL;
-        this.rMatrixR = digitalAudio.rMatrixR;
-        this.rMatrixC = digitalAudio.rMatrixC;
-        this.rMatrixSW = digitalAudio.rMatrixSW;
-        this.rMatrixSL = digitalAudio.rMatrixSL;
-        this.rMatrixSR = digitalAudio.rMatrixSR;
+          this.rMatrixL = digitalAudio.rMatrixL;
+          this.rMatrixR = digitalAudio.rMatrixR;
+          this.rMatrixC = digitalAudio.rMatrixC;
+          this.rMatrixSW = digitalAudio.rMatrixSW;
+          this.rMatrixSL = digitalAudio.rMatrixSL;
+          this.rMatrixSR = digitalAudio.rMatrixSR;
 
-        // Update audio service variables
-        this.audio.frontDelay = this.frontDelay / 1000;
-        this.audio.centerDelay = this.centerDelay / 1000;
-        this.audio.subWooferDelay = this.subWooferDelay / 1000;
-        this.audio.surroundDelay = this.surroundDelay / 1000;
+          // Update audio service variables
+          this.audio.frontDelay = this.frontDelay / 1000;
+          this.audio.centerDelay = this.centerDelay / 1000;
+          this.audio.subWooferDelay = this.subWooferDelay / 1000;
+          this.audio.surroundDelay = this.surroundDelay / 1000;
 
-        this.audio.lowPassFreq = this.lowPassFreq;
-        this.audio.highPassFreq = this.highPassFreq;
-        this.audio.lowPassQ = this.lowPassQ;
-        this.audio.highPassQ = this.highPassQ;
+          this.audio.lowPassFreq = this.lowPassFreq;
+          this.audio.highPassFreq = this.highPassFreq;
+          this.audio.lowPassQ = this.lowPassQ;
+          this.audio.highPassQ = this.highPassQ;
 
-        this.audio.highShelfFreq = this.highShelfFreq;
-        this.audio.highShelfGain = this.highShelfGain;
+          this.audio.highShelfFreq = this.highShelfFreq;
+          this.audio.highShelfGain = this.highShelfGain;
 
-        this.audio.masterGain = this.masterGain;
-        this.audio.frontGain = this.frontGain;
-        this.audio.centerGain = this.centerGain;
-        this.audio.subwooferGain = this.subwooferGain;
-        this.audio.surroundGain = this.surroundGain;
+          this.audio.masterGain = this.masterGain;
+          this.audio.frontGain = this.frontGain;
+          this.audio.centerGain = this.centerGain;
+          this.audio.subwooferGain = this.subwooferGain;
+          this.audio.surroundGain = this.surroundGain;
 
-        this.audio.lMatrixL = this.lMatrixL;
-        this.audio.lMatrixR = this.lMatrixR;
-        this.audio.lMatrixC = this.lMatrixC;
-        this.audio.lMatrixSW = this.lMatrixSW;
-        this.audio.lMatrixSL = this.lMatrixSL;
-        this.audio.lMatrixSR = this.lMatrixSR;
+          this.audio.lMatrixL = this.lMatrixL;
+          this.audio.lMatrixR = this.lMatrixR;
+          this.audio.lMatrixC = this.lMatrixC;
+          this.audio.lMatrixSW = this.lMatrixSW;
+          this.audio.lMatrixSL = this.lMatrixSL;
+          this.audio.lMatrixSR = this.lMatrixSR;
 
-        this.audio.rMatrixL = this.rMatrixL;
-        this.audio.rMatrixR = this.rMatrixR;
-        this.audio.rMatrixC = this.rMatrixC;
-        this.audio.rMatrixSW = this.rMatrixSW;
-        this.audio.rMatrixSL = this.rMatrixSL;
-        this.audio.rMatrixSR = this.rMatrixSR;
-      }
-    });
+          this.audio.rMatrixL = this.rMatrixL;
+          this.audio.rMatrixR = this.rMatrixR;
+          this.audio.rMatrixC = this.rMatrixC;
+          this.audio.rMatrixSW = this.rMatrixSW;
+          this.audio.rMatrixSL = this.rMatrixSL;
+          this.audio.rMatrixSR = this.rMatrixSR;
+        }
+      })
+    );
   }
 
   updateMatrix() {
@@ -329,7 +348,13 @@ export class AppComponent implements OnInit {
   }
 
   resetSettings() {
-    this.localStorage.clear().subscribe();
+    this.subscriptions.add(
+      this.localStorage.clear().subscribe()
+    );
     window.location.reload();
+  }
+
+  ngOnDestroy() {
+    this.subscriptions.unsubscribe();
   }
 }
