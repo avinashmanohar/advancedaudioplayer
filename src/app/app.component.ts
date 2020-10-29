@@ -52,7 +52,7 @@ export class AppComponent implements OnInit, OnDestroy {
   // Filters variables
   lowPassFreq = 60;
   lowPassQ = 1;
-  lpfSlopeLevel = 0;
+  lpfSlopeLevel = '0';
 
   highPassFreq = 300; // Hz
   highPassQ = 0;
@@ -133,7 +133,7 @@ export class AppComponent implements OnInit, OnDestroy {
       // console.log('Never reached');
       this.seekSubscription.unsubscribe();
     }
-    this.maxDurationInSec = 0;
+    this.maxDurationInSec = 1;
     this.currentSeek = 0;
 
     this.subscriptions.unsubscribe();
@@ -191,7 +191,7 @@ export class AppComponent implements OnInit, OnDestroy {
   updateHighPassFilter() {
     this.storeSettings();
     console.log('Update highpass filter');
-    this.audio.lpfSlopeLevel = this.lpfSlopeLevel;
+    this.audio.lpfSlopeLevel = +this.lpfSlopeLevel;
     this.audio.lowPassFreq = this.lowPassFreq;
     this.audio.highPassFreq = this.highPassFreq;
     this.audio.lowPassQ = this.lowPassQ;

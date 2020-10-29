@@ -317,22 +317,23 @@ export class AudioService {
     // Filters
     this.updateHighPassFilter();
     // Filters ends
-    /*
-        this.filterHighPassL.connect(merger, 0, 0); // Left
-        this.filterHighPassR.connect(merger, 0, 1); // Right
-        this.filterHighPassC.connect(merger, 0, 2); // Center
-        this.filterLowPassSW.connect(merger, 0, 3); // Sub Woofer
-        this.filterHighPassSL.connect(merger, 0, 4); // Surround Left
-        this.filterHighPassSR.connect(merger, 0, 5); // Surround Right
-     */
+
     this.filterHighPassL.connect(merger, 0, 0); // Left
     this.filterHighPassR.connect(merger, 0, 1); // Right
     this.filterHighPassC.connect(merger, 0, 2); // Center
-    this['filterLowPassSW' + this.lpfSlopeLevel].connect(merger, 0, 0); // Sub Woofer
-    this['filterLowPassSW' + this.lpfSlopeLevel].connect(merger, 0, 1); // Sub Woofer
+    this['filterLowPassSW' + this.lpfSlopeLevel].connect(merger, 0, 3); // Sub Woofer
     this.filterHighPassSL.connect(merger, 0, 4); // Surround Left
     this.filterHighPassSR.connect(merger, 0, 5); // Surround Right
 
+    /* 
+        this.filterHighPassL.connect(merger, 0, 0); // Left
+        this.filterHighPassR.connect(merger, 0, 1); // Right
+        this.filterHighPassC.connect(merger, 0, 2); // Center
+        this['filterLowPassSW' + this.lpfSlopeLevel].connect(merger, 0, 0); // Sub Woofer
+        this['filterLowPassSW' + this.lpfSlopeLevel].connect(merger, 0, 1); // Sub Woofer
+        this.filterHighPassSL.connect(merger, 0, 4); // Surround Left
+        this.filterHighPassSR.connect(merger, 0, 5); // Surround Right
+     */
     merger.connect(this.context.destination);
 
     // playback the sound
@@ -415,13 +416,13 @@ export class AudioService {
     this.filterLowPassSW0.Q.value = this.lowPassQ;
     this.filterLowPassSW1.type = 'lowpass'; // For subwoofer
     this.filterLowPassSW1.frequency.value = this.lowPassFreq; // 24dB/octave slope
-    // this.filterLowPassSW2.Q.value = this.lowPassQ;
+    // this.filterLowPassSW1.Q.value = this.lowPassQ;
     this.filterLowPassSW2.type = 'lowpass'; // For subwoofer
     this.filterLowPassSW2.frequency.value = this.lowPassFreq; // 36dB/octave slope
-    // this.filterLowPassSW3.Q.value = this.lowPassQ;
+    // this.filterLowPassSW2.Q.value = this.lowPassQ;
     this.filterLowPassSW3.type = 'lowpass'; // For subwoofer
-    this.filterLowPassSW3.frequency.value = this.lowPassFreq;
-    // this.filterLowPassSW4.Q.value = this.lowPassQ;
+    this.filterLowPassSW3.frequency.value = this.lowPassFreq; // 48dB/octave slope
+    // this.filterLowPassSW3.Q.value = this.lowPassQ;
 
     this.filterHighPassL.type = 'highpass';
     this.filterHighPassL.frequency.value = this.highPassFreq; // Hz;
