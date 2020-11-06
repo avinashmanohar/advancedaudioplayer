@@ -317,23 +317,23 @@ export class AudioService {
     // Filters
     this.updateHighPassFilter();
     // Filters ends
-
-    this.filterHighPassL.connect(merger, 0, 0); // Left
-    this.filterHighPassR.connect(merger, 0, 1); // Right
-    this.filterHighPassC.connect(merger, 0, 2); // Center
-    this['filterLowPassSW' + this.lpfSlopeLevel].connect(merger, 0, 3); // Sub Woofer
-    this.filterHighPassSL.connect(merger, 0, 4); // Surround Left
-    this.filterHighPassSR.connect(merger, 0, 5); // Surround Right
-
     /* 
         this.filterHighPassL.connect(merger, 0, 0); // Left
         this.filterHighPassR.connect(merger, 0, 1); // Right
         this.filterHighPassC.connect(merger, 0, 2); // Center
-        this['filterLowPassSW' + this.lpfSlopeLevel].connect(merger, 0, 0); // Sub Woofer
-        this['filterLowPassSW' + this.lpfSlopeLevel].connect(merger, 0, 1); // Sub Woofer
+        this['filterLowPassSW' + this.lpfSlopeLevel].connect(merger, 0, 3); // Sub Woofer
         this.filterHighPassSL.connect(merger, 0, 4); // Surround Left
         this.filterHighPassSR.connect(merger, 0, 5); // Surround Right
      */
+
+    this.filterHighPassL.connect(merger, 0, 0); // Left
+    this.filterHighPassR.connect(merger, 0, 1); // Right
+    this.filterHighPassC.connect(merger, 0, 2); // Center
+    this['filterLowPassSW' + this.lpfSlopeLevel].connect(merger, 0, 0); // Sub Woofer
+    this['filterLowPassSW' + this.lpfSlopeLevel].connect(merger, 0, 1); // Sub Woofer
+    this.filterHighPassSL.connect(merger, 0, 4); // Surround Left
+    this.filterHighPassSR.connect(merger, 0, 5); // Surround Right
+
     merger.connect(this.context.destination);
 
     // playback the sound
